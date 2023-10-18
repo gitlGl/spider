@@ -1,6 +1,6 @@
 # 导入依赖
 import jieba,os,psutil,xlrd
-import pandas as pd
+import pandas as pd,codecs
 import multiprocessing
 
 # 获取关键词列表
