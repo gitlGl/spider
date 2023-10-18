@@ -2,7 +2,7 @@ import  xlrd
 import requests,time,json
 import pandas as pd
 import xlrd,os
-import psutil,math
+import math
 from concurrent.futures import ThreadPoolExecutor
 import copy
 

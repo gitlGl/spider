@@ -1,7 +1,7 @@
 # 导入依赖
-import jieba,os,psutil,xlrd
+import jieba,os,psutil,xlrd,os
 import pandas as pd
-import multiprocessing
+import multiprocessing,codecs
 
 # 获取关键词列表
 def getKeyWordList():
@@ -66,7 +66,18 @@ def main():
 base_dir = "出口上市公司年报/"
 keyword_dir =  "关键词.xls"
 cipin_dir =  "词频统计.csv"
+def utf8_to_gbk(file_name):
+    with codecs.open(file_name,"r",encoding="utf8") as f:
+        text = f.read()
+    text_gbk = codecs.encode(text, encoding = "gbk")
+    with codecs.open(file_name+"_","wb") as f:
+        f.write(text_gbk)
+    os.remove(file_name)
+    os.rename(file_name+"_", file_name)
+
+
 if __name__ == '__main__':
     main()
+    utf8_to_gbk(cipin_dir)
 
 
