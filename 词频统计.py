@@ -47,9 +47,9 @@ def statistics(folder_name,key_word):
         return
     df = pd.DataFrame(datas)     
     if not os.path.exists(cipin_dir) :
-        df.to_csv(cipin_dir, mode='a', index=False,header=True)
+        df.to_csv(cipin_dir, mode='a', index=False,header=True,encoding="gbk")
     else:
-        df.to_csv(cipin_dir, mode='a', index=False, header=False)
+        df.to_csv(cipin_dir, mode='a', index=False, header=False,encoding="gbk")
     for filename in list_filename:
         if filename.endswith(".txt"):   
             os.remove(base_dir+folder_name+"/"+filename)
@@ -67,17 +67,9 @@ base_dir = "出口上市公司年报/"
 keyword_dir =  "关键词.xls"
 cipin_dir =  "词频统计.csv"
 
-def utf8_to_gbk(file_name):
-    with open(file_name,"r",encoding="utf8") as f:
-        text = f.read()
-  
-    with open(file_name+"_","w",encoding="gbk") as f:
-        f.write(text)
-    os.remove(file_name)
-    os.rename(file_name+"_", file_name)
+
 if __name__ == '__main__':
     main()
-    utf8_to_gbk(cipin_dir)
-
+   
 
 
