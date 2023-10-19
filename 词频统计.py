@@ -1,7 +1,7 @@
 # 导入依赖
 import jieba,os,psutil,xlrd,os
 import pandas as pd
-import multiprocessing,codecs
+import multiprocessing
 
 # 获取关键词列表
 def getKeyWordList():
@@ -47,9 +47,9 @@ def statistics(folder_name,key_word):
         return
     df = pd.DataFrame(datas)     
     if not os.path.exists(cipin_dir) :
-        df.to_csv(cipin_dir, mode='a', index=False,header=True)
+        df.to_csv(cipin_dir, mode='a', index=False,header=True,encoding="gbk")
     else:
-        df.to_csv(cipin_dir, mode='a', index=False, header=False)
+        df.to_csv(cipin_dir, mode='a', index=False, header=False,encoding="gbk")
     for filename in list_filename:
         if filename.endswith(".txt"):   
             os.remove(base_dir+folder_name+"/"+filename)
@@ -66,18 +66,7 @@ def main():
 base_dir = "出口上市公司年报/"
 keyword_dir =  "关键词.xls"
 cipin_dir =  "词频统计.csv"
-def utf8_to_gbk(file_name):
-    with codecs.open(file_name,"r",encoding="utf8") as f:
-        text = f.read()
-    text_gbk = codecs.encode(text, encoding = "gbk")
-    with codecs.open(file_name+"_","wb") as f:
-        f.write(text_gbk)
-    os.remove(file_name)
-    os.rename(file_name+"_", file_name)
-
 
 if __name__ == '__main__':
     main()
-    utf8_to_gbk(cipin_dir)
-
-
+    #utf8_to_gbk(cipin_dir)
