@@ -10,9 +10,9 @@ def getKeyWordList():
             sheets = book.sheets()
             for sheet in sheets:
                 rows = sheet.nrows
-            for i in range(rows):
-                list1 = sheet.row_values(rowx=i)
-                key_word.append((list1[0]))
+                for i in range(rows):
+                    list1 = sheet.row_values(rowx=i)
+                    key_word.append((list1[0]))
     return key_word
 def getKeyWordData(text_path,filer_name,key_word):
     # 读取文本
