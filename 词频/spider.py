@@ -1,7 +1,7 @@
 import  xlrd
 import requests,time,json
 import pandas as pd
-import xlrd,os
+import xlrd,os,psutil
 import math
 from concurrent.futures import ThreadPoolExecutor
 import copy
@@ -164,7 +164,7 @@ def req(year,org_dict,number = ''): # 传入年份，机构字典，股票代码
                     time.sleep(60)
             pageDownload(year,pageNum,req)
     else:
-        with ThreadPoolExecutor(max_workers=5) as executor: 
+        with ThreadPoolExecutor(max_workers=psutil.cpu_count()+3) as executor: 
             for pageNum in range(1,pages+1):
                 data_["pageNum"] = str(pageNum)
                 while True:

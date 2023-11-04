@@ -1,8 +1,7 @@
 # 导入依赖
-import jieba,os,psutil,xlrd,os
+import os,psutil,xlrd
 import pandas as pd
 import multiprocessing
-
 # 获取关键词列表
 def getKeyWordList():
     key_word = []
@@ -10,9 +9,10 @@ def getKeyWordList():
             sheets = book.sheets()
             for sheet in sheets:
                 rows = sheet.nrows
-            for i in range(rows):
-                list1 = sheet.row_values(rowx=i)
-                key_word.append((list1[0]))
+                for i in range(rows):
+                    list1 = sheet.row_values(rowx=i)
+                    key_word.append((list1[0]))
+    print(key_word)
     return key_word
 def getKeyWordData(text_path,filer_name,key_word):
     # 读取文本
@@ -21,7 +21,7 @@ def getKeyWordData(text_path,filer_name,key_word):
     with  open(path_filename, "r", encoding='utf-8') as f:
         txt = f.read()
         # 使用精确模式对文本进行分词
-        words = jieba.lcut(txt)
+        #words = jieba.lcut(txt)
         # 通过键值对的形式存储词语及其出现的次数
         year = filer_name[:-8]
         year  = year[-4:]#获取年份
@@ -29,7 +29,7 @@ def getKeyWordData(text_path,filer_name,key_word):
         key_word_data['公司代码'] = filer_name+'年报'
         key_word_data['年份'] = year
         for wd in key_word:
-            key_word_data[wd] = words.count(wd)#统计关键词出现次数
+            key_word_data[wd] = txt.count(wd)#统计关键词出现次数
     return key_word_data   
 def statistics(folder_name,key_word):
     list_filename = os.listdir(base_dir+folder_name)
@@ -51,8 +51,9 @@ def statistics(folder_name,key_word):
     else:
         df.to_csv(cipin_dir, mode='a', index=False, header=False,encoding="gbk")
     for filename in list_filename:
-        if filename.endswith(".txt"):   
-            os.remove(base_dir+folder_name+"/"+filename)
+        if filename.endswith(".txt"):
+            pass   
+            #os.remove(base_dir+folder_name+"/"+filename)
        
 # 主函数
 def main():
