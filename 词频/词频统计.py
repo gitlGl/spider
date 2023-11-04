@@ -12,7 +12,6 @@ def getKeyWordList():
                 for i in range(rows):
                     list1 = sheet.row_values(rowx=i)
                     key_word.append((list1[0]))
-    print(key_word)
     return key_word
 def getKeyWordData(text_path,filer_name,key_word):
     # 读取文本
