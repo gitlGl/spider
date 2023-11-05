@@ -1,5 +1,6 @@
 from pdfminer.high_level import extract_text
-import os ,psutil
+import os ,psutil,sys
+os.chdir(sys.path[0])
 import multiprocessing          
 def pdf2txt(folder_name):#转换函数,多进程调用函数
     list_filename = os.listdir(folder_name)

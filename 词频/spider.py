@@ -1,10 +1,11 @@
 import  xlrd
 import requests,time,json
 import pandas as pd
-import xlrd,os
+import xlrd,os,sys
 import math
 import asyncio,aiohttp
 import copy
+os.chdir(sys.path[0])
 
 class Session():
     session =   None

@@ -1,9 +1,10 @@
 # 导入依赖
-import os,psutil,xlrd
+import os,psutil,xlrd,sys
 import pandas as pd
 import multiprocessing
 #import jieba
 # 获取关键词列表
+os.chdir(sys.path[0])
 def getKeyWordList():
     key_word = []
     with xlrd.open_workbook(keyword_dir) as book:

@@ -1,9 +1,10 @@
 from bs4 import BeautifulSoup
-import requests,os
+import requests,os,sys
 import csv,copy,xlrd,time
 from openpyxl import load_workbook
 from openpyxl.utils.dataframe import dataframe_to_rows
 import pandas as pd
+os.chdir(sys.path[0])
 
 表字段 = {"利润表":(('REPORT_DATE', '报告期'), ('PARENT_NETPROFIT', '净利润(元)'),
  ('PARENT_NETPROFIT_RATIO', '净利润同比(%)'), ('DEDUCT_PARENT_NETPROFIT', '扣非归母净利润(元)'),
@@ -121,7 +122,7 @@ def convert(field_data,data_temp):
         else:
             num = round(field_data,2)
            
-            data_temp.append(str(num))
+            data_temp.append(num)
     if type_ is str:
         if "00:00:00" in field_data:
             field_data = field_data[:10]
@@ -154,10 +155,10 @@ def main():
                 
                     if abs(item[field]) < 10:
                         num = round(item[field],3)
-                        data_temp.append(str(num))
+                        data_temp.append(num)
                     else:
                         num = round(item[field],2)
-                        data_temp.append(str(num))     
+                        data_temp.append(num)     
                 else:
                         convert(item[field],data_temp)
 
