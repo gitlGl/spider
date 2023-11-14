@@ -11,12 +11,9 @@ os.chdir(os.path.dirname(current_file_path))
 
 
 def chekData(number):# 检查已下载公司年报数量是否足够
-    list_folder_name = next(os.walk(base_dir))[1]
-    for folder_name in list_folder_name:
-        list_filename = os.listdir(base_dir+folder_name)
-        if len(list_filename) != number :
- 
-            print("年报数量不足请检查："+folder_name)
+    for root, dirs, files in os.walk(base_dir):
+        if len(files) != number:
+            print("年报数量不足请检查："+root)
 
 def download(url_item):# 下载年报
     fname = open(file_name, "a")
