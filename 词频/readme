@@ -1,8 +1,0 @@
-psutil
-xlrd
-requests
-pandas
-aiohttp
-pdfminer.six
-
-http://quotes.money.163.com/service/lrb_600500.html
