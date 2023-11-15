@@ -13,7 +13,8 @@ os.chdir(os.path.dirname(current_file_path))
 def chekData(number):# 检查已下载公司年报数量是否足够
     for root, dirs, files in os.walk(base_dir):
         if len(files) != number:
-            print("年报数量不足请检查："+root)
+            if root != base_dir:
+                print("年报数量不足请检查："+root)
 
 def download(url_item):# 下载年报
     fname = open(file_name, "a")
