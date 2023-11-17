@@ -3,6 +3,7 @@ import csv,copy,xlrd,time
 from openpyxl import load_workbook
 from openpyxl.utils.dataframe import dataframe_to_rows
 import pandas as pd
+#os.chdir(sys.path[0])
 current_file_path = os.path.abspath(__file__)
 os.chdir(os.path.dirname(current_file_path))  
 

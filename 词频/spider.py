@@ -196,13 +196,18 @@ def thread_(number,org_dict,list_years):# 多进程调用req函数
 
 def get_orgid():#获取A股公司代码对应的OrgId,用于构造表单数据
     org_dict = {}
-    org_json = requests.get("http://www.cninfo.com.cn/new/data/szse_stock.json").json()["stockList"]
+    while True:
+        try:
+            org_json = requests.get("http://www.cninfo.com.cn/new/data/szse_stock.json").json()["stockList"]
+            break
+        except Exception as e:
+            print("获取公司代码失败60秒后重试",e)
+            time.sleep(61)
 
     for i in range(len(org_json)):
         org_dict[org_json[i]["code"]] = org_json[i]["orgId"]
 
     return org_dict
-
 def check(number):#检查xls文件格式，调整文件内容
     if type(number) == str:
         if len(number) == 6 and number.isdigit():
