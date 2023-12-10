@@ -34,7 +34,7 @@ def getKeyWordData(text_path,file,key_word):
             key_word_data[wd] =txt.count(wd)#统计关键词出现次数
             
     return key_word_data   
-def statistics(root,file,key_word):
+def statistics(root,file,key_word,lock):
     datas = []
     if file.endswith(".txt"):
         key_word_data = getKeyWordData( root,file,key_word)
@@ -42,14 +42,17 @@ def statistics(root,file,key_word):
         datas.append(key_word_data)
     else:
         print(file+"不是txt文件")
+        return
    #把数据数据写入csv文件
     # if len(datas) == 0:
     #     return
-    df = pd.DataFrame(datas)     
+    df = pd.DataFrame(datas)  
+    lock.acquire()
     if not os.path.exists(cipin_dir) :
         df.to_csv(cipin_dir, mode='a', index=False,header=True,encoding="gbk")
     else:
         df.to_csv(cipin_dir, mode='a', index=False, header=False,encoding="gbk")
+    lock.release()
     # for file in files:
     #     if file.endswith(".txt"):   
     #         os.remove(root +file)
@@ -58,13 +61,14 @@ def statistics(root,file,key_word):
 def main():
     key_word = getKeyWordList()
     file_dir_lst = []
+    lock = multiprocessing.Manager().Lock()
     
     for root, dirs, files in os.walk(base_dir):
         file_dir_lst.extend([(root + "\\",file) for file in files])
 
     pool = multiprocessing.Pool(processes = psutil.cpu_count()+1)#使用多进程，提高统计速度
     for root, file in file_dir_lst:
-        pool.apply_async(statistics, (root ,file,key_word))#
+        pool.apply_async(statistics, (root ,file,key_word,lock))#
 
     pool.close()
     pool.join()
