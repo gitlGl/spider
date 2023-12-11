@@ -32,14 +32,14 @@ def download(url_item):# 下载年报
                 print("请求失败，正在重试")
         if not os.path.exists(base_dir+ url['number'] +'/'):
             os.makedirs(base_dir+ url['number'] +'/' )
-        with open(base_dir+ url['number'] +'/'+url['number']+ "-" + url['year'] + "年度报告" + ".pdf", "wb") as f:
+        with open(base_dir+ url['number'] +'/'+url['number']+ "-" + url['year'] + "-" +url['name']+  ".pdf", "wb") as f:
             f.write(r.content)                    
             print(f"{url['number']}-{url['year']}年报下载完成！") # 打印进度
         #with open(file_name, "a") as fname:
         fname.write(url['number']+url['year'] +'\n') # 将内容追加到到文件尾部
     fname.close()
 
-def downloadError(url,number):# 存在公司年报不带年份下载到“存在问题年报文件夹”文件夹
+def downloadError(url,number,name):# 存在公司年报不带年份下载到“存在问题年报文件夹”文件夹
     while True:
         try:
             with requests.session()  as s:
@@ -51,7 +51,7 @@ def downloadError(url,number):# 存在公司年报不带年份下载到“存在
             time.sleep(60)
     if not os.path.exists(dir_error+ number +'/'):
         os.makedirs(dir_error+ number +'/' )
-    with open(dir_error+ number +'/'+number+ "-" + "年报" + ".pdf", "wb") as f:    
+    with open(dir_error+ number +'/'+number+ "-" + name  + ".pdf", "wb") as f:    
         f.write(r.content) 
     print(f"{number}年报下载完成！") # 打印进度
 
@@ -73,6 +73,7 @@ def pageDownload(year,pageNum,req):
         return
     for item in list_item:# 遍历announcements列表中的数据，目的是排除英文报告和报告摘要，唯一确定年度报告或者更新版
         number = item["secCode"]
+        name = item['secName']
         if "摘要"  in item["announcementTitle"]:
             continue
         if "取消"  in item["announcementTitle"]:
@@ -90,6 +91,7 @@ def pageDownload(year,pageNum,req):
                 item1["url"] = pdfurl
                 item1["year"] = year_
                 item1["number"] = number
+                item1['name'] = name
                 url_item.append(item1)
             else:#年报标题上无年份，或含年份外的其他数字
                 downloadError(pdfurl,number)
@@ -104,9 +106,10 @@ def pageDownload(year,pageNum,req):
                 item2["url"] = pdfurl
                 item2["year"] = year_
                 item2["number"] = number
+                item2['name'] = name
                 url_item.append(item2)
             else:
-                downloadError(pdfurl,number)  #存在公司年报不带年份下载到“存在问题年报文件夹”文件夹
+                downloadError(pdfurl,number,name)  #存在公司年报不带年份下载到“存在问题年报文件夹”文件夹
             df = pd.DataFrame([pdfurl])
             df.to_csv('年报url.csv', mode='a', index=False, header=False)
     download(url_item)
@@ -206,6 +209,7 @@ def get_orgid():#获取A股公司代码对应的OrgId,用于构造表单数据
 
     for i in range(len(org_json)):
         org_dict[org_json[i]["code"]] = org_json[i]["orgId"]
+      
 
     return org_dict
 def check(number):#检查xls文件格式，调整文件内容
@@ -286,3 +290,7 @@ if file_name_xls != "":
 org_dict = get_orgid()
 if __name__ == '__main__':    
    main()
+
+
+
+'secName'

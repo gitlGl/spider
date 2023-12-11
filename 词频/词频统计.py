@@ -1,6 +1,9 @@
 # 导入依赖
 import os,psutil,xlrd,sys
 import pandas as pd
+from openpyxl import Workbook
+from openpyxl.utils.dataframe import dataframe_to_rows
+from openpyxl import load_workbook
 import multiprocessing
 current_file_path = os.path.abspath(__file__)
 os.chdir(os.path.dirname(current_file_path))
@@ -19,56 +22,73 @@ def getKeyWordList():
     return key_word
 def getKeyWordData(text_path,file,key_word):
     # 读取文本
-    key_word_data = {}
+    data = []
     path_filename = text_path + file
     with  open(path_filename, "r", encoding='utf-8') as f:
         txt = f.read()
         # 使用精确模式对文本进行分词
         #words = jieba.lcut(txt)
-        # 通过键值对的形式存储词语及其出现的次数
-        year = file[:-8][-4:]#获取年份
-        code = file[:-13]#获取公司代码
-        key_word_data['公司代码'] = code+'年报'
-        key_word_data['年份'] = year
+        year = file[7:11]#获取年份
+        code = file[:6]#获取公司代码
+        name = ''
+        for chr in file[::-1][4:]: 
+            if chr == "-":
+                break
+            name = name + chr
+        
+        data.append(code)
+        data.append(name[::-1])
+        data.append(year) 
+        
+
         for wd in key_word:
-            key_word_data[wd] =txt.count(wd)#统计关键词出现次数
+            data.append(txt.count(wd))#统计关键词出现次数
             
-    return key_word_data   
-def statistics(root,file,key_word,lock):
+    return data  
+def statistics(file_lst,key_word,lock):
     datas = []
-    if file.endswith(".txt"):
-        key_word_data = getKeyWordData( root,file,key_word)
-        #os.remove("年度报告/"+folder_name+"/"+file)
-        datas.append(key_word_data)
-    else:
-        print(file+"不是txt文件")
-        return
-   #把数据数据写入csv文件
-    # if len(datas) == 0:
-    #     return
-    df = pd.DataFrame(datas)  
+    for root ,file in file_lst:
+        if file.endswith(".txt"):
+            data = getKeyWordData( root,file,key_word)
+            #os.remove("年度报告/"+folder_name+"/"+file)
+            datas.append(data)
+        else:
+            print(file+"不是txt文件")
+            return
+   
+    df = pd.DataFrame(datas)
     lock.acquire()
-    if not os.path.exists(cipin_dir) :
-        df.to_csv(cipin_dir, mode='a', index=False,header=True,encoding="gbk")
-    else:
-        df.to_csv(cipin_dir, mode='a', index=False, header=False,encoding="gbk")
+    book = load_workbook("词频统计.xlsx")
+    sheet = book.active
+    for row in dataframe_to_rows(df, index=False, header=False):
+        sheet.append(row)
+    book.save("词频统计.xlsx")
     lock.release()
-    # for file in files:
-    #     if file.endswith(".txt"):   
-    #         os.remove(root +file)
-       
+    
 # 主函数
 def main():
     key_word = getKeyWordList()
+    lst = ["企业代码","企业名称","年份"]
+    lst.extend(key_word)
+    book = Workbook()
+    sheet = book.active
+    sheet.append(lst) 
+    book.save("词频统计.xlsx")
+
     file_dir_lst = []
     lock = multiprocessing.Manager().Lock()
     
     for root, dirs, files in os.walk(base_dir):
         file_dir_lst.extend([(root + "\\",file) for file in files])
-
+    
     pool = multiprocessing.Pool(processes = psutil.cpu_count()+1)#使用多进程，提高统计速度
-    for root, file in file_dir_lst:
-        pool.apply_async(statistics, (root ,file,key_word,lock))#
+    group_count = 2
+    total_group = len(file_dir_lst) // group_count
+    for  num in range(total_group):
+        pool.apply_async(statistics, (file_dir_lst[num* group_count:(num+1)*group_count],key_word,lock) )#
+
+    pool.apply_async(statistics,(file_dir_lst[total_group*(group_count):],key_word,lock))#
+    
 
     pool.close()
     pool.join()

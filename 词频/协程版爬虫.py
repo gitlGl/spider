@@ -40,7 +40,7 @@ async def downlaodTask(item):
             time.sleep(60)
     if not os.path.exists(base_dir+ item['number'] +'/'):
         os.makedirs(base_dir+ item['number'] +'/' )
-    with  open(base_dir+ item['number'] +'/'+item['number']+ "-" + item['year'] + "年度报告" + ".pdf", "wb")as f:
+    with open(base_dir+ item['number'] +'/'+item['number']+ "-" + item['year'] + "-" +item['name']+  ".pdf", "wb") as f:
         f.write(content)                       
     print(f"{item['number']}-{item['year']}年报下载完成！") # 打印进度 
     with open(file_name, 'a+') as writers: # 打开文件
@@ -57,7 +57,7 @@ async def download(url_item):# 下载年报
         else:
             await downlaodTask(url)
 
-async def downloadError(url,stock):# 存在公司年报不带年份下载到“存在问题年报文件夹”文件夹
+async def downloadError(url,number,name):# 存在公司年报不带年份下载到“存在问题年报文件夹”文件夹
     session = await  Session.getSession()
     while True:
         try:
@@ -68,11 +68,11 @@ async def downloadError(url,stock):# 存在公司年报不带年份下载到“�
         except Exception as e:
             print("请求失败，正在重试",e)
             time.sleep(60)
-    if not os.path.exists(dir_error+ stock +'/'):
-        os.makedirs(dir_error+ stock +'/' )
-    with  open(dir_error+ stock +'/'+stock+ "-" + "年度报告" + ".pdf", "wb") as f:
+    if not os.path.exists(dir_error+ number +'/'):
+        os.makedirs(dir_error+ number +'/' )
+    with open(dir_error+ number +'/'+number+ "-" + name  + ".pdf", "wb") as f: 
             f.write(content)                       
-    print(f"{stock}年报下载完成！") # 打印进度
+    print(f"{number}年报下载完成！") # 打印进度
 
 
 async def pageDownload(list_item):
@@ -82,6 +82,7 @@ async def pageDownload(list_item):
     number =''
     for item in list_item:# 遍历announcements列表中的数据，目的是排除英文报告和报告摘要，唯一确定年度报告或者更新版
         number = item["secCode"]
+        name = item['secName'].strip("*")
         if "摘要"  in item["announcementTitle"]:
             continue
         if "取消"  in item["announcementTitle"]:
@@ -99,9 +100,10 @@ async def pageDownload(list_item):
                 item1["url"] = pdfurl
                 item1["year"] = year_
                 item1["number"] = number
+                item1["name"] = name
                 url_item.append(item1)
             else:#年报标题上无年份，或含年份外的其他数字
-                await  downloadError(pdfurl,number)
+                await  downloadError(pdfurl,number,name)
             df = pd.DataFrame([pdfurl])
             df.to_csv('年报url.csv', mode='a', index=False, header=False)  
         else:
@@ -113,9 +115,10 @@ async def pageDownload(list_item):
                 item2["url"] = pdfurl
                 item2["year"] = year_
                 item2["number"] = number
+                item2["name"] = name
                 url_item.append(item2)
             else:
-               await downloadError(pdfurl,number)  #存在公司年报不带年份下载到“存在问题年报文件夹”文件夹
+               await downloadError(pdfurl,number,name)  #存在公司年报不带年份下载到“存在问题年报文件夹”文件夹
             df = pd.DataFrame([pdfurl])
             df.to_csv('年报url.csv', mode='a', index=False, header=False)
     await download(url_item)
