@@ -69,7 +69,7 @@ def statistics(file_lst,key_word,lock):
             datas.append(data)
         else:
             print(file+"不是txt文件")
-            return
+            continue#return改为continue，直接去掉return也可以。
    
     df = pd.DataFrame(datas)
     lock.acquire()
