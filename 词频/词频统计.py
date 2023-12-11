@@ -54,7 +54,7 @@ def statistics(file_lst,key_word,lock):
             datas.append(data)
         else:
             print(file+"不是txt文件")
-            return
+            continue
    
     df = pd.DataFrame(datas)
     lock.acquire()
@@ -82,7 +82,7 @@ def main():
         file_dir_lst.extend([(root + "\\",file) for file in files])
     
     pool = multiprocessing.Pool(processes = psutil.cpu_count()+1)#使用多进程，提高统计速度
-    group_count = 1
+    group_count = 2
     total_group = len(file_dir_lst) // group_count
     for  num in range(total_group):
         pool.apply_async(statistics, (file_dir_lst[num* group_count:(num+1)*group_count],key_word,lock) )#
