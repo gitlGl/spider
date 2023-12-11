@@ -73,7 +73,7 @@ def pageDownload(year,pageNum,req):
         return
     for item in list_item:# 遍历announcements列表中的数据，目的是排除英文报告和报告摘要，唯一确定年度报告或者更新版
         number = item["secCode"]
-        name = item['secName']
+        name = item['secName'].strip("*")
         if "摘要"  in item["announcementTitle"]:
             continue
         if "取消"  in item["announcementTitle"]:
