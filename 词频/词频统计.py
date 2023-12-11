@@ -28,18 +28,33 @@ def getKeyWordData(text_path,file,key_word):
         txt = f.read()
         # 使用精确模式对文本进行分词
         #words = jieba.lcut(txt)
-        year = file[7:11]#获取年份
-        code = file[:6]#获取公司代码
+        code = ''
+        year = ''
+        tem_code = ''
+        tem_year = ''
+        for chr in  file:
+            if len(tem_year) == 4:
+                if not chr.isdigit():
+                    year = tem_year
+                    tem_code = ''
+                    tem_year = ''
+                    continue
+            if len(tem_code) == 6:
+                code  = tem_code
+                tem_code = ''
+                tem_year = ''
+                continue
+            if chr.isdigit(): 
+                tem_code = tem_code + chr
+                tem_year = tem_year + chr
         name = ''
         for chr in file[::-1][4:]: 
             if chr == "-":
                 break
             name = name + chr
-        
         data.append(code)
         data.append(name[::-1])
         data.append(year) 
-        
 
         for wd in key_word:
             data.append(txt.count(wd))#统计关键词出现次数
@@ -82,7 +97,7 @@ def main():
         file_dir_lst.extend([(root + "\\",file) for file in files])
     
     pool = multiprocessing.Pool(processes = psutil.cpu_count()+1)#使用多进程，提高统计速度
-    group_count = 2
+    group_count = 30
     total_group = len(file_dir_lst) // group_count
     for  num in range(total_group):
         pool.apply_async(statistics, (file_dir_lst[num* group_count:(num+1)*group_count],key_word,lock) )#
@@ -94,7 +109,7 @@ def main():
     pool.join()
     
 
-base_dir = "出口上市公司年报"
+base_dir = "2022测试"
 keyword_dir =  "关键词.xls"
 cipin_dir =  "词频统计.csv"
 
