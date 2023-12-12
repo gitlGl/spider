@@ -1,8 +1,6 @@
 # 导入依赖
-import os,psutil,xlrd,sys
-import pandas as pd
+import os,psutil,xlrd
 from openpyxl import Workbook
-from openpyxl.utils.dataframe import dataframe_to_rows
 from openpyxl import load_workbook
 import multiprocessing
 current_file_path = os.path.abspath(__file__)
@@ -39,13 +37,12 @@ def getKeyWordData(text_path,file,key_word):
         data.append(code)
         data.append(name[::-1])
         data.append(year) 
-        
 
         for wd in key_word:
             data.append(txt.count(wd))#统计关键词出现次数
             
     return data  
-def statistics(file_lst,key_word,lock):
+def statistics(num,file_lst,key_word,lock):
     datas = []
     for root ,file in file_lst:
         if file.endswith(".txt"):
@@ -54,16 +51,18 @@ def statistics(file_lst,key_word,lock):
             datas.append(data)
         else:
             print(file+"不是txt文件")
-            continue
+            continue#return改为continue，直接去掉return也可以。
    
-    df = pd.DataFrame(datas)
+    
     lock.acquire()
     book = load_workbook("词频统计.xlsx")
     sheet = book.active
-    for row in dataframe_to_rows(df, index=False, header=False):
+    for row in datas:
         sheet.append(row)
+
     book.save("词频统计.xlsx")
     lock.release()
+    print(f"第{num}组统计完成")
     
 # 主函数
 def main():
@@ -72,7 +71,17 @@ def main():
     lst.extend(key_word)
     book = Workbook()
     sheet = book.active
-    sheet.append(lst) 
+    sheet.append(lst)
+    
+    """
+    book = Workbook()
+    book.save("词频统计.xlsx")
+    上面两行代码会新建一个文件，且会覆盖已有同名文件
+    下面第一行代码则是导入已存在的文件，不存在则报错
+    book = load_workbook("词频统计.xlsx")
+    book.save("词频统计.xlsx")
+
+    """
     book.save("词频统计.xlsx")
 
     file_dir_lst = []
@@ -84,17 +93,18 @@ def main():
     pool = multiprocessing.Pool(processes = psutil.cpu_count()+1)#使用多进程，提高统计速度
     group_count = 2
     total_group = len(file_dir_lst) // group_count
+    print(f"共有{len(file_dir_lst)}个文件，分为{total_group+1}组,每组{group_count}，最后一组为余数，从第0组")
     for  num in range(total_group):
-        pool.apply_async(statistics, (file_dir_lst[num* group_count:(num+1)*group_count],key_word,lock) )#
+        pool.apply_async(statistics, (num,file_dir_lst[num* group_count:(num+1)*group_count],key_word,lock) )#
 
-    pool.apply_async(statistics,(file_dir_lst[total_group*(group_count):],key_word,lock))#
+    pool.apply_async(statistics,(num+1,file_dir_lst[total_group*(group_count):],key_word,lock))#
     
 
     pool.close()
     pool.join()
     
 
-base_dir = "出口上市公司年报"
+base_dir = "2022测试"
 keyword_dir =  "关键词.xls"
 cipin_dir =  "词频统计.csv"
 
