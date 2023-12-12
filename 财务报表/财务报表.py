@@ -168,7 +168,7 @@ def main():
         df = pd.DataFrame(data)
         sheet = book[财报表类型元组[1]]
         # 将DataFrame的数据逐行写入工作表
-        for row in dataframe_to_rows(df, index=False, header=False):
+        for row in data:
             sheet.append(row)
 
         # 保存Excel文件

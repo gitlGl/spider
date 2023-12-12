@@ -77,6 +77,7 @@ def statistics(num,file_lst,key_word,lock):
         sheet.append(row)
 
     book.save("词频统计.xlsx")
+    book.close()
     lock.release()
     print(f"第{num}组统计完成")
     
@@ -99,6 +100,7 @@ def main():
 
     """
     book.save("词频统计.xlsx")
+    book.close()
 
     file_dir_lst = []
     lock = multiprocessing.Manager().Lock()
