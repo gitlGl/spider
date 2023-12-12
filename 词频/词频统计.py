@@ -100,24 +100,24 @@ def main():
     """
     book.save("词频统计.xlsx")
 
-    # file_dir_lst = []
-    # lock = multiprocessing.Manager().Lock()
+    file_dir_lst = []
+    lock = multiprocessing.Manager().Lock()
     
-    # for root, dirs, files in os.walk(base_dir):
-    #     file_dir_lst.extend([(root + "\\",file) for file in files])
+    for root, dirs, files in os.walk(base_dir):
+        file_dir_lst.extend([(root + "\\",file) for file in files])
     
-    # pool = multiprocessing.Pool(processes = psutil.cpu_count()+1)#使用多进程，提高统计速度
-    # group_count = 2
-    # total_group = len(file_dir_lst) // group_count
-    # print(f"共有{len(file_dir_lst)}个文件，分为{total_group+1}组,每组{group_count}，最后一组为余数，从第0组")
-    # for  num in range(total_group):
-    #     pool.apply_async(statistics, (num,file_dir_lst[num* group_count:(num+1)*group_count],key_word,lock) )#
+    pool = multiprocessing.Pool(processes = psutil.cpu_count()+1)#使用多进程，提高统计速度
+    group_count = 2
+    total_group = len(file_dir_lst) // group_count
+    print(f"共有{len(file_dir_lst)}个文件，分为{total_group+1}组,每组{group_count}，最后一组为余数，从第0组")
+    for  num in range(total_group):
+        pool.apply_async(statistics, (num,file_dir_lst[num* group_count:(num+1)*group_count],key_word,lock) )#
 
-    # pool.apply_async(statistics,(num+1,file_dir_lst[total_group*(group_count):],key_word,lock))#
+    pool.apply_async(statistics,(num+1,file_dir_lst[total_group*(group_count):],key_word,lock))#
     
 
-    # pool.close()
-    # pool.join()
+    pool.close()
+    pool.join()
     
 
 base_dir = "2022测试"
