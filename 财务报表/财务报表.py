@@ -1,8 +1,7 @@
 import requests,os
-import csv,copy,xlrd,time
+import xlrd,time, signal,sys
 from openpyxl import load_workbook
 from openpyxl.utils.dataframe import dataframe_to_rows
-import pandas as pd
 #os.chdir(sys.path[0])
 current_file_path = os.path.abspath(__file__)
 os.chdir(os.path.dirname(current_file_path))  
@@ -103,11 +102,14 @@ def get_data_json(number):
     while True:
         try:
             data_json = requests.get(url).json()
+            result = data_json['result']
+            if result is None:
+                return None
             break   
         except Exception as e:
            print("请求失败，稍后重试")
            time.sleep(60)
-    return data_json['result']["data"]
+    return result["data"]
 
 def convert(field_data,data_temp):
     type_ = type(field_data)
@@ -129,44 +131,85 @@ def convert(field_data,data_temp):
             field_data = field_data[:10]
         data_temp.append(field_data)
 
+def get_data(number):
+    if number + 财报表类型元组[1] in download_Progress:
+            print(number + 财报表类型元组[1]+"已下载")
+            return
+    data = []
+    data_json = get_data_json(number)
+    if not data_json:
+        print(f"企业{number}没有数据")
+        return
+    for item in data_json:
+        data_temp = []
+        if 财报表类型元组[1]  == "业绩报表":
+            data_temp.append(业绩报表财报类型.strip('"'))
+        else: data_temp.append(财报类型字典[item["DATE_TYPE_CODE"]])
+        data_temp.append(item["SECURITY_NAME_ABBR"] +"（" +item["SECURITY_CODE"] + "）")
+
+        for field,field_chines in 表字段[财报表类型元组[1]]:
+            if  item[field] is  None:
+                data_temp.append(None)
+
+            elif r"%" in field_chines :
+
+                if abs(item[field]) < 10:
+                    num = round(item[field],3)
+                    data_temp.append(str(num))
+                else:
+                    num = round(item[field],2)
+                    data_temp.append(str(num))     
+            else:
+                    convert(item[field],data_temp)
+
+        data.append(data_temp)
+    return data
 
 
 def main():
     list_number = get_number(file_name_xls)
     book = load_workbook(财务表路径)
+    flag = 0#程序退出标志
+    def signal_handler(sig, frame):
+        while True:
+            f = input("退出程序？输入Y/N:")
+            if f == "Y" or f == 'y':
+                nonlocal flag
+                flag = 1
+                break
+            if f == "N" or f == 'n':
+                break
+        
+        #print(sig,type(sig))#(type int)
+        # 信号处理函数
+        # stack = traceback.extract_stack(frame)
+        # for file_name, lineno, function, _ in stack:
+        #     print(file_name,lineno,function)
+        # locals_dict = frame.f_locals
+        # print("Local Variables:")
+        # print(locals_dict["number"])
+        # # for var_name, var_value in locals_dict.items():
+        # #     print(f"{var_name} = {var_value}")
+        # book.save(财务表路径)
+        # book.close()
+        # sys.exit(0)
+
+    # 注册信号处理函数
+    signal.signal(signal.SIGINT, signal_handler)
+
+# 其他程序代码...
     for number in list_number:
-        if number + 财报表类型元组[1] in download_Progress:
-            print(number + 财报表类型元组[1]+"已下载")
+        if flag:
+            book.save(财务表路径)
+            book.close()
+            sys.exit(0)
+
+        data = get_data(number)
+        if not data:
             continue
 
-        data = []
-        data_json = get_data_json(number)
-        for item in data_json:
-            data_temp = []
-            if 财报表类型元组[1]  == "业绩报表":
-                data_temp.append(业绩报表财报类型.strip('"'))
-            else: data_temp.append(财报类型字典[item["DATE_TYPE_CODE"]])
-            data_temp.append(item["SECURITY_NAME_ABBR"] +"（" +item["SECURITY_CODE"] + "）")
+        sheet = book[财报表类型元组[1]]#选择excel表
 
-            for field,field_chines in 表字段[财报表类型元组[1]]:
-                if  item[field] is  None:
-                    data_temp.append(None)
-
-                elif r"%" in field_chines :
-
-                    if abs(item[field]) < 10:
-                        num = round(item[field],3)
-                        data_temp.append(str(num))
-                    else:
-                        num = round(item[field],2)
-                        data_temp.append(str(num))     
-                else:
-                        convert(item[field],data_temp)
-
-            data.append(data_temp)
-
-        df = pd.DataFrame(data)
-        sheet = book[财报表类型元组[1]]
         # 将DataFrame的数据逐行写入工作表
         for row in data:
             sheet.append(row)
@@ -217,6 +260,13 @@ download_Progress = readTxt(file_name)# 读取已爬取进度
 财务表路径 = "财务表.xlsx"
 file_name_xls = "股票代码.xls"#需要下载的公司代码所在的xls文件,出口上市公司.xls
 
+print("退出请按ctrl + C，请勿强制退出，否则导致数据损坏")
+
+def countdown(seconds):
+    for i in range(seconds, 0, -1):
+        print(i, end='\r')
+        time.sleep(1)
+countdown(5)
 for item in 财报表类型:
     财报表类型元组 = item
     main()
