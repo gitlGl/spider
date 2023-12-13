@@ -1,5 +1,5 @@
 # 导入依赖
-import os,psutil,xlrd
+import os,psutil,xlrd,time
 from openpyxl import Workbook
 from openpyxl import load_workbook
 import multiprocessing
@@ -127,8 +127,17 @@ keyword_dir =  "关键词.xls"
 cipin_dir =  "词频统计.csv"
 
 
+def countdown(seconds):
+    for i in range(seconds, 0, -1):
+        print(i, end='\r')
+        time.sleep(1)
+
+
 if __name__ == '__main__':
+    print("请勿强制退出，否则导致数据损坏")
+    countdown(5)
     main()
+   
    
 
 
