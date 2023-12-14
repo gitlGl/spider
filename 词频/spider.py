@@ -1,10 +1,11 @@
 import  xlrd
 import requests,time,json
-import pandas as pd
+import csv
 import xlrd,os
 import psutil,math
 from concurrent.futures import ThreadPoolExecutor
 import copy
+from openpyxl import load_workbook
 #os.chdir(sys.path[0])
 current_file_path = os.path.abspath(__file__)
 os.chdir(os.path.dirname(current_file_path))
@@ -20,7 +21,7 @@ def download(url_item):# 下载年报
     fname = open(file_name, "a")
     for url in url_item:
         if url['number']+url['year'] in download_Progress:
-            print(f"已下载！") # 打印进度
+            print(f"{ url['number']+url['year']}已下载过，跳过") # 打印进度
             continue
         while True:
             try:
@@ -35,8 +36,8 @@ def download(url_item):# 下载年报
         with open(base_dir+ url['number'] +'/'+url['number']+ "-" + url['year'] + "-" +url['name']+  ".pdf", "wb") as f:
             f.write(r.content)                    
             print(f"{url['number']}-{url['year']}年报下载完成！") # 打印进度
-        #with open(file_name, "a") as fname:
-        fname.write(url['number']+url['year'] +'\n') # 将内容追加到到文件尾部
+        with open(file_name, "a") as fname:
+            fname.write(url['number']+url['year'] +'\n') # 将内容追加到到文件尾部
     fname.close()
 
 def downloadError(url,number,name):# 存在公司年报不带年份下载到“存在问题年报文件夹”文件夹
@@ -95,8 +96,11 @@ def pageDownload(year,pageNum,req):
                 url_item.append(item1)
             else:#年报标题上无年份，或含年份外的其他数字
                 downloadError(pdfurl,number)
-            df = pd.DataFrame([pdfurl])
-            df.to_csv('年报url.csv', mode='a', index=False, header=False)  
+            # df = pd.DataFrame([pdfurl])
+            # df.to_csv('年报url.csv', mode='a', index=False, header=False)  
+            with open('年报url.csv') as csvd_f:
+                csv.writer(cvs_f).writerow([pdfurl])
+                
         else:
             adjunctUrl = item["adjunctUrl"] # "finalpage/2019-04-30/1206161856.PDF" 中间部分便为年报发布日期，只需对字符切片即可
             pdfurl = "http://static.cninfo.com.cn/" + adjunctUrl
@@ -110,8 +114,10 @@ def pageDownload(year,pageNum,req):
                 url_item.append(item2)
             else:
                 downloadError(pdfurl,number,name)  #存在公司年报不带年份下载到“存在问题年报文件夹”文件夹
-            df = pd.DataFrame([pdfurl])
-            df.to_csv('年报url.csv', mode='a', index=False, header=False)
+            # df = pd.DataFrame([pdfurl])
+            # df.to_csv('年报url.csv', mode='a', index=False, header=False)
+            with open('年报url.csv') as csvd_f:
+                csv.writer(cvs_f).writerow([pdfurl])
     download(url_item)
     if file_name_xls =='':
         print(f"{year}年{pageNum}页下载完成！") # 打印进度
@@ -127,8 +133,8 @@ def get_pages(url,headers,data_):
                 req = s.post(url,data=data_,headers=headers)
                 json_data = json.loads(req.text)
                 break
-        except:
-            print("请求失败，稍后重试")
+        except Exception as e :
+            print("请求失败，稍后重试",e)
             time.sleep(60)
     
     
@@ -227,19 +233,12 @@ def check(number):#检查xls文件格式，调整文件内容
     else:
         print("格式错误：",number)
 def getNumber():#获取xls文件内的公司代码
-    list_number = []
-    with xlrd.open_workbook(file_name_xls) as book:
-        sheets = book.sheets()
-        for sheet in sheets:
-            rows = sheet.nrows
-            for i in range(1, rows):
-                list1 = sheet.row_values(rowx=i)
-                number = check(list1[0])
-                if number == None:
-                    continue
-                else:
-                    list_number.append(number)
-    return list_number
+    # 加载 Excel 文件
+    workbook = load_workbook(file_name_xls)
+    # 选择第一个工作表
+    sheet = workbook.active
+    return [cell.value for cell in sheet['A']]
+
 def main():
 
  
@@ -269,7 +268,7 @@ def readTxt():# 读取已下载的公司代码
 base_dir = "出口上市公司年报/"# 下载的年报存放的文件夹
 dir_error = "存在问题年报/"#需要手动核实问题的年报存放的文件夹
 file_name = "已下载公司代码.txt"#记录年报的下载进度
-file_name_xls = "股票代码.xls"#需要下载的公司代码所在的xls文件,出口上市公司.xls
+file_name_xls = "股票代码.xlsx"#需要下载的公司代码所在的xls文件,出口上市公司.xls
 download_Progress = readTxt()# 读取已下载进度
 list_years = ["2015","2016","2017","2018","2019","2020","2021"] # 下载所需要的年份年报
 data  = {
@@ -293,5 +292,3 @@ if __name__ == '__main__':
    main()
 
 
-
-'secName'

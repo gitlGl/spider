@@ -1,10 +1,10 @@
-import  xlrd
+
 import requests,time,json
-import pandas as pd
-import xlrd,os
+import csv,os
 import math
 import asyncio,aiohttp
 import copy,contextvars
+from openpyxl import load_workbook
 
 #os.chdir(sys.path[0])
 current_file_path = os.path.abspath(__file__)
@@ -107,8 +107,10 @@ async def pageDownload(list_item):
                 url_item.append(item1)
             else:#年报标题上无年份，或含年份外的其他数字
                 await  downloadError(pdfurl,number,name)
-            df = pd.DataFrame([pdfurl])
-            df.to_csv('年报url.csv', mode='a', index=False, header=False)  
+            # df = pd.DataFrame([pdfurl])
+            # df.to_csv('年报url.csv', mode='a', index=False, header=False)  
+            with open('年报url.csv') as csvd_f:
+                csv.writer(cvs_f).writerow([pdfurl])
         else:
             adjunctUrl = item["adjunctUrl"] # "finalpage/2019-04-30/1206161856.PDF" 中间部分便为年报发布日期，只需对字符切片即可
             pdfurl = "http://static.cninfo.com.cn/" + adjunctUrl
@@ -122,8 +124,10 @@ async def pageDownload(list_item):
                 url_item.append(item2)
             else:
                await downloadError(pdfurl,number,name)  #存在公司年报不带年份下载到“存在问题年报文件夹”文件夹
-            df = pd.DataFrame([pdfurl])
-            df.to_csv('年报url.csv', mode='a', index=False, header=False)
+            # df = pd.DataFrame([pdfurl])
+            # df.to_csv('年报url.csv', mode='a', index=False, header=False)
+            with open('年报url.csv') as csvd_f:
+                csv.writer(cvs_f).writerow([pdfurl])
     await download(url_item)
     
   
@@ -158,7 +162,7 @@ async def get_pages(url,headers,data_):
                     break 
            
         except Exception as e :
-            print("请求失ds败，稍后重试",e)
+            print("请求失败，稍后重试",e)
             time.sleep(60)
     return totalpages
 
@@ -256,19 +260,11 @@ def check(number):#检查xls文件格式，调整文件内容
         print("格式错误：",number)
 
 def getNumber():#获取xls文件内的公司代码
-    list_number = []
-    with xlrd.open_workbook(file_name_xls) as book:
-        sheets = book.sheets()
-        for sheet in sheets:
-            rows = sheet.nrows
-            for i in range(1, rows):
-                list1 = sheet.row_values(rowx=i)
-                number = check(list1[0])
-                if number == None:
-                    continue
-                else:
-                    list_number.append(number)
-    return list_number
+    # 加载 Excel 文件
+    workbook = load_workbook(file_name_xls)
+    # 选择第一个工作表
+    sheet = workbook.active
+    return [cell.value for cell in sheet['A']]
 
 
 async def main():
@@ -290,7 +286,7 @@ c = contextvars.ContextVar("")
 base_dir = "出口上市公司年报/"# 下载的年报存放的文件夹
 dir_error = "存在问题年报/"#需要手动核实问题的年报存放的文件夹
 file_name = "已下载公司代码.txt"#记录年报的下载进度
-file_name_xls = "股票代码.xls"#需要下载的公司代码所在的xls文件出口上市公司.xls
+file_name_xls = ""#需要下载的公司代码所在的xls文件出口上市公司.xls
 download_Progress = readTxt()# 读取已下载进度
 list_years = ["2015","2016","2017","2018","2019","2020","2021"] # 下载所需要的年份年报
 data  = {
