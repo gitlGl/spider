@@ -74,7 +74,7 @@ def pageDownload(year,pageNum,req):
         return
     for item in list_item:# 遍历announcements列表中的数据，目的是排除英文报告和报告摘要，唯一确定年度报告或者更新版
         number = item["secCode"]
-        name = item['secName'].strip("*")
+        name = item['secName'].replace("*",'').replace(" ",'')
         if "摘要"  in item["announcementTitle"]:
             continue
         if "取消"  in item["announcementTitle"]:
@@ -268,7 +268,7 @@ def readTxt():# 读取已下载的公司代码
 base_dir = "出口上市公司年报/"# 下载的年报存放的文件夹
 dir_error = "存在问题年报/"#需要手动核实问题的年报存放的文件夹
 file_name = "已下载公司代码.txt"#记录年报的下载进度
-file_name_xls = "股票代码.xlsx"#需要下载的公司代码所在的xls文件,出口上市公司.xls
+file_name_xls = ""#需要下载的公司代码所在的xls文件,出口上市公司.xls
 download_Progress = readTxt()# 读取已下载进度
 list_years = ["2015","2016","2017","2018","2019","2020","2021"] # 下载所需要的年份年报
 data  = {
