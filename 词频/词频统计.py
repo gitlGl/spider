@@ -9,15 +9,12 @@ os.chdir(os.path.dirname(current_file_path))
 # 获取关键词列表
 #os.chdir(sys.path[0])
 def getKeyWordList():
-    key_word = []
-    with xlrd.open_workbook(keyword_dir) as book:
-            sheets = book.sheets()
-            for sheet in sheets:
-                rows = sheet.nrows
-                for i in range(rows):
-                    list1 = sheet.row_values(rowx=i)
-                    key_word.append((list1[0]))
-    return key_word
+    # 加载 Excel 文件
+    workbook = load_workbook(keyword_dir)
+    # 选择第一个工作表
+    sheet = workbook.active
+    return [cell.value for cell in sheet['A']]
+
 def getKeyWordData(text_path,file,key_word):
     # 读取文本
     data = []
@@ -123,7 +120,7 @@ def main():
     
 
 base_dir = "2022测试"
-keyword_dir =  "关键词.xls"
+keyword_dir =  "关键词.xlsx"
 cipin_dir =  "词频统计.csv"
 
 
@@ -135,7 +132,7 @@ def countdown(seconds):
 
 if __name__ == '__main__':
     print("请勿强制退出，否则导致数据损坏")
-    countdown(5)
+    #countdown(5)
     main()
    
    
