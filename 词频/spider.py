@@ -133,10 +133,10 @@ def get_pages(url,headers,data_):
                 req = s.post(url,data=data_,headers=headers)
                 json_data = json.loads(req.text)
                 break
-        except:
-            print("请求失败，稍后重试")
+             
+        except Exception as e :
+            print("请求失败，稍后重试",e)
             time.sleep(60)
-    
     
     totalAnnouncement = json_data['totalAnnouncement']#不能用网上的totalpages，有的会出错
     a = totalAnnouncement / 30
