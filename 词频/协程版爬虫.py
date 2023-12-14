@@ -109,7 +109,7 @@ async def pageDownload(list_item):
                 await  downloadError(pdfurl,number,name)
             # df = pd.DataFrame([pdfurl])
             # df.to_csv('年报url.csv', mode='a', index=False, header=False)  
-            with open('年报url.csv') as csv_f:
+            with open('年报url.csv',"a+",newline = '') as csv_f:
                 csv.writer(csv_f).writerow([pdfurl])
         else:
             adjunctUrl = item["adjunctUrl"] # "finalpage/2019-04-30/1206161856.PDF" 中间部分便为年报发布日期，只需对字符切片即可
@@ -126,7 +126,7 @@ async def pageDownload(list_item):
                await downloadError(pdfurl,number,name)  #存在公司年报不带年份下载到“存在问题年报文件夹”文件夹
             # df = pd.DataFrame([pdfurl])
             # df.to_csv('年报url.csv', mode='a', index=False, header=False)
-            with open('年报url.csv') as csv_f:
+            with open('年报url.csv',"a+",newline = '') as csv_f:
                 csv.writer(csv_f).writerow([pdfurl])
     await download(url_item)
     
