@@ -98,7 +98,7 @@ def pageDownload(year,pageNum,req):
                 downloadError(pdfurl,number)
             # df = pd.DataFrame([pdfurl])
             # df.to_csv('年报url.csv', mode='a', index=False, header=False)  
-            with open('年报url.csv') as csv_f:
+            with open('年报url.csv',"a+",newline = '') as csv_f:
                 csv.writer(csv_f).writerow([pdfurl])
                 
         else:
@@ -116,7 +116,7 @@ def pageDownload(year,pageNum,req):
                 downloadError(pdfurl,number,name)  #存在公司年报不带年份下载到“存在问题年报文件夹”文件夹
             # df = pd.DataFrame([pdfurl])
             # df.to_csv('年报url.csv', mode='a', index=False, header=False)
-            with open('年报url.csv') as csv_f:
+            with open('年报url.csv',"a+",newline = '') as csv_f:
                 csv.writer(csv_f).writerow([pdfurl])
     download(url_item)
     if file_name_xls =='':
