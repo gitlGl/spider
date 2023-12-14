@@ -131,7 +131,6 @@ def get_pages(url,headers,data_):
             with requests.session()  as s:
                 s.keep_alive = False     
                 req = s.post(url,data=data_,headers=headers)
-                print(req.text)
                 json_data = json.loads(req.text)
                 break
              
