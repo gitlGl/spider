@@ -79,14 +79,29 @@ async def downloadError(url,number,name):# 存在公司年报不带年份下载�
 
 
 async def pageDownload(list_item):
-    url_item = []
     if not list_item:# 确保json.loads(req.text)["announcements"]非空，是可迭代对象
         return
-    number =''
+    
+    if not list_item:# 确保json.loads(req.text)["announcements"]非空，是可迭代对象
+        return
+    
+    if not os.path.exists('年报元数据.csv'):
+        with open('年报元数据.csv',"a+",newline = '') as csv_f:
+            csv.writer(csv_f).writerow(list_item[0].keys())
+        
+    with open('年报元数据.csv',"a+",newline = '') as csv_f:
+        writer = csv.writer(csv_f)
+        for item in list_item:
+            writer.writerow(item.values())
+            
+    url_item = []
     for item in list_item:# 遍历announcements列表中的数据，目的是排除英文报告和报告摘要，唯一确定年度报告或者更新版
+        year_  = getYear(item["announcementTitle"])
         number = item["secCode"]
         invalid_chars = r'[\\/:"*?<>|]'
         name = re.sub(invalid_chars, '',item['secName'] )
+        if not year_ in list_years:
+            continue
         if "摘要"  in item["announcementTitle"]:
             continue
         if "取消"  in item["announcementTitle"]:
@@ -98,7 +113,6 @@ async def pageDownload(list_item):
         if "修订" in item["announcementTitle"] or "更新" in item["announcementTitle"] or "更正" in item["announcementTitle"]:
             adjunctUrl = item["adjunctUrl"] # "finalpage/2019-04-30/1206161856.PDF" 中间部分便为年报发布日期，只需对字符切片即可
             pdfurl = "http://static.cninfo.com.cn/" + adjunctUrl
-            year_  = getYear(item["announcementTitle"])
             if year_:
                 item1 = {}
                 item1["url"] = pdfurl

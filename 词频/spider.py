@@ -3,12 +3,12 @@ import csv,re
 import os
 import psutil,math
 from concurrent.futures import ThreadPoolExecutor
+import threading
 import copy
 from openpyxl import load_workbook
 #os.chdir(sys.path[0])
 current_file_path = os.path.abspath(__file__)
 os.chdir(os.path.dirname(current_file_path))
-
 
 def chekData(number):# 检查已下载公司年报数量是否足够
     for root, dirs, files in os.walk(base_dir):
@@ -69,12 +69,27 @@ def getYear(tile:str):#获取年报标题上的年份，便于对年报进行重
 def pageDownload(year,pageNum,req):
     url_item = []
     list_item = json.loads(req.text)["announcements"]
-    if not list_item:# 确保json.loads(req.text)["announcements"]非空，是可迭代对象
-        return
+    
+    with lock:
+        if not list_item:# 确保json.loads(req.text)["announcements"]非空，是可迭代对象
+            return
+        
+        if not os.path.exists('年报元数据.csv'):
+            with open('年报元数据.csv',"a+",newline = '') as csv_f:
+                csv.writer(csv_f).writerow(list_item[0].keys())
+            
+        with open('年报元数据.csv',"a+",newline = '') as csv_f:
+            writer = csv.writer(csv_f)
+            for item in list_item:
+                writer.writerow(item.values())
+
     for item in list_item:# 遍历announcements列表中的数据，目的是排除英文报告和报告摘要，唯一确定年度报告或者更新版
         number = item["secCode"]
         invalid_chars = r'[\\/:"*?<>|]'
         name = re.sub(invalid_chars, '',item['secName'] )
+        year_  = getYear(item["announcementTitle"])
+        if not year_ in list_years:
+            continue
         if "摘要"  in item["announcementTitle"]:
             continue
         if "取消"  in item["announcementTitle"]:
@@ -86,7 +101,7 @@ def pageDownload(year,pageNum,req):
         if "修订" in item["announcementTitle"] or "更新" in item["announcementTitle"] or "更正" in item["announcementTitle"]:
             adjunctUrl = item["adjunctUrl"] # "finalpage/2019-04-30/1206161856.PDF" 中间部分便为年报发布日期，只需对字符切片即可
             pdfurl = "http://static.cninfo.com.cn/" + adjunctUrl
-            year_  = getYear(item["announcementTitle"])
+            
             if year_:
                 item1 = {}
                 item1["url"] = pdfurl
@@ -97,10 +112,11 @@ def pageDownload(year,pageNum,req):
             else:#年报标题上无年份，或含年份外的其他数字
                 downloadError(pdfurl,number)
             # df = pd.DataFrame([pdfurl])
-            # df.to_csv('年报url.csv', mode='a', index=False, header=False)  
-            with open('年报url.csv',"a+",newline = '') as csv_f:
-                csv.writer(csv_f).writerow([pdfurl])
-                
+            # df.to_csv('年报url.csv', mode='a', index=False, header=False)
+            with lock:  
+                with open('年报url.csv',"a+",newline = '') as csv_f:
+                    csv.writer(csv_f).writerow([pdfurl])
+                    
         else:
             adjunctUrl = item["adjunctUrl"] # "finalpage/2019-04-30/1206161856.PDF" 中间部分便为年报发布日期，只需对字符切片即可
             pdfurl = "http://static.cninfo.com.cn/" + adjunctUrl
@@ -116,8 +132,9 @@ def pageDownload(year,pageNum,req):
                 downloadError(pdfurl,number,name)  #存在公司年报不带年份下载到“存在问题年报文件夹”文件夹
             # df = pd.DataFrame([pdfurl])
             # df.to_csv('年报url.csv', mode='a', index=False, header=False)
-            with open('年报url.csv',"a+",newline = '') as csv_f:
-                csv.writer(csv_f).writerow([pdfurl])
+            with lock:
+                with open('年报url.csv',"a+",newline = '') as csv_f:
+                    csv.writer(csv_f).writerow([pdfurl])
     download(url_item)
     if file_name_xls =='':
         print(f"{year}年{pageNum}页下载完成！") # 打印进度
@@ -264,7 +281,7 @@ def readTxt():# 读取已下载的公司代码
     1.假设需要下载分类为农业行业的上市公司年报，需要把'trade': '',设置为对应的值，且设置file_name_xls = "",
     2.假设需要下载特定公司年报，设置file_name_xls = "公司年代码.xls",设置'trade': '','plate': '',#该参数为股市板块为空
 """
-
+lock = threading.Lock()
 base_dir = "出口上市公司年报/"# 下载的年报存放的文件夹
 dir_error = "存在问题年报/"#需要手动核实问题的年报存放的文件夹
 file_name = "已下载公司代码.txt"#记录年报的下载进度
