@@ -10,14 +10,6 @@ from openpyxl import load_workbook
 current_file_path = os.path.abspath(__file__)
 os.chdir(os.path.dirname(current_file_path))
 
-class Session():
-    session =   None
-    async def getSession():
-        if Session.session == None:
-            Session.session = aiohttp.ClientSession()
-            Session.session.keep_alive = False
-        return Session.session
-    
 def chekData(number):# 检查已下载公司年报数量是否足够
     for root, dirs, files in os.walk(base_dir):
         if len(files) != number:
@@ -26,11 +18,12 @@ def chekData(number):# 检查已下载公司年报数量是否足够
 
 
 async def downlaodTask(item):
-    semaphore = c.get()  
+    semaphore = Sem.get()  
+    session = s.get()
     if item['number'] +item['year'] in download_Progress:
         print(f"{item['number'] +item['year']}已下载过，跳过")
         return
-    session = await  Session.getSession()
+
     while True:
         try:
             async with semaphore:
@@ -60,8 +53,8 @@ async def download(url_item):# 下载年报
             await downlaodTask(url)
 
 async def downloadError(url,number,name):# 存在公司年报不带年份下载到“存在问题年报文件夹”文件夹
-    semaphore = c.get()
-    session = await  Session.getSession()
+    semaphore = Sem.get()
+    session = s.get()
     while True:
         try:
             async with semaphore:
@@ -164,8 +157,9 @@ def readTxt():# 读取已下载的公司代码
         return data
     
 async def get_pages(url,headers,data_):
-    session = await  Session.getSession()
-    semaphore = c.get()
+    semaphore = Sem.get()
+    session = s.get()
+    semaphore = Sem.get()
     while True:
         try:
             async with semaphore:
@@ -182,7 +176,8 @@ async def get_pages(url,headers,data_):
     return totalpages
 
 async def req(year,org_dict,number = ''):
-    semaphore = c.get()
+    semaphore = Sem.get()
+    session = s.get()
     # post请求地址（巨潮资讯网的那个查询框实质为该地址）
     url = "http://www.cninfo.com.cn/new/hisAnnouncement/query"
     # 表单数据，需要在浏览器开发者模式中查看具体格式
@@ -202,7 +197,6 @@ async def req(year,org_dict,number = ''):
         print(f"共{pages}页")
     for pageNum in range(1,pages+1):
         data_["pageNum"] = str(pageNum)
-        session = await  Session.getSession()
         while True:
             try:
                 async with semaphore:
@@ -285,7 +279,9 @@ def getNumber():#获取xls文件内的公司代码
 async def main():
     # 限制并发量为10
     semaphore = asyncio.Semaphore(10)
-    c.set(semaphore)
+    Session =  aiohttp.ClientSession()
+    Sem.set(semaphore)
+    s.set(Session)
     await thread_(org_dict,list_years)
     chekData(len(list_years))# 检查已下载公司年报数量是否足够
     await Session.session.close()# 关闭session
@@ -298,11 +294,13 @@ async def main():
     2.假设需要下载特定公司年报，设置file_name_xls = "公司年代码.xls",设置'trade': '','plate': '',#该参数为股市板块为空
 """
  # 限制并发量为10
-c = contextvars.ContextVar("")
+Sem = contextvars.ContextVar("semaphore")
+s =   contextvars.ContextVar("session")
+
 base_dir = "出口上市公司年报/"# 下载的年报存放的文件夹
 dir_error = "存在问题年报/"#需要手动核实问题的年报存放的文件夹
 file_name = "已下载公司代码.txt"#记录年报的下载进度
-file_name_xls = ""#需要下载的公司代码所在的xls文件出口上市公司.xls
+file_name_xls = "股票代码.xlsx"#股票代码.xlsx
 download_Progress = readTxt()# 读取已下载进度
 list_years = ["2015","2016","2017","2018","2019","2020","2021"] # 下载所需要的年份年报
 data  = {
