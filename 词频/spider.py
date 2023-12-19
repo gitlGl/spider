@@ -24,8 +24,8 @@ def download(url_item):# 下载年报
             continue
         while True:
             try:
-                    r = session.get(url['url'])
-                    break
+                    with  session.get(url['url'])  as r:
+                        break
             except:
                 print("请求失败，正在重试")
         if not os.path.exists(base_dir+ url['number'] +'/'):
@@ -40,8 +40,8 @@ def download(url_item):# 下载年报
 def downloadError(url,number,name):# 存在公司年报不带年份下载到“存在问题年报文件夹”文件夹
     while True:
         try: 
-                r = session.get(url)
-                break
+                with session.get(url) as r:
+                    break
         except:
             print("请求失败，正在重试")
             time.sleep(60)
@@ -141,9 +141,9 @@ def pageDownload(year,pageNum,req):
 def get_pages(url,headers,data_):
     while True:
         try:
-                req = session.post(url,data=data_,headers=headers)
-                json_data = json.loads(req.text)
-                break
+                with session.post(url,data=data_,headers=headers) as req:
+                    json_data = json.loads(req.text)
+                    break
         except Exception as e :
             print("请求失败，稍后重试",e)
             time.sleep(60)
@@ -177,24 +177,27 @@ def req(year,org_dict,number = ''): # 传入年份，机构字典，股票代码
         for pageNum in range(1,pages):
             data_["pageNum"] = str(pageNum)
             while True:
-                try:   
-                        req = session.post(url,data=data_,headers=headers)
+                try:
+                    with session.post(url,data=data_,headers=headers) as req :
+                        pageDownload(year,pageNum,req)
                         break
                 except:
                     print("请求失败，稍后重试")
                     time.sleep(60)
-            pageDownload(year,pageNum,req)
+    
     else:
         with ThreadPoolExecutor(max_workers=5) as executor: 
             for pageNum in range(1,pages+1):
                 data_["pageNum"] = str(pageNum)
                 while True:
                     try:
-                            req = session.post(url,data=data_,headers=headers)
+                        with session.post(url,data=data_,headers=headers) as req :
+                            pageDownload(year,pageNum,req)
                             break
                     except:
                         print("请求失败，稍后重试")
                         time.sleep(60)
+    
                 if year + str(pageNum) in download_Progress:
                     print(f"{year + str(pageNum)}已下载过，跳过")
                     continue
@@ -271,12 +274,20 @@ def readTxt():# 读取已下载的公司代码
     1.假设需要下载分类为农业行业的上市公司年报，需要把'trade': '',设置为对应的值，且设置file_name_xls = "",
     2.假设需要下载特定公司年报，设置file_name_xls = "公司年代码.xls",设置'trade': '','plate': '',#该参数为股市板块为空
 """
+
 session = requests.session()
+session.mount('https://', requests.adapters.HTTPAdapter(pool_connections=100, pool_maxsize=5))
+"""
+HTTPAdapter()默认参数为
+pool_connections=10, pool_maxsize=10, max_retries=0, pool_block=False
+pool_connections是最多连接的不同host数，
+pool_maxsize同一host最多连接数。
+"""
 lock = threading.Lock()
 base_dir = "出口上市公司年报/"# 下载的年报存放的文件夹
 dir_error = "存在问题年报/"#需要手动核实问题的年报存放的文件夹
 file_name = "已下载公司代码.txt"#记录年报的下载进度
-file_name_xls = ""#需要下载的公司代码所在的xls文件,出口上市公司.xls
+file_name_xls = "股票代码.xlsx"#需要下载的公司代码所在的xls文件,出口上市公司.xls
 download_Progress = readTxt()# 读取已下载进度
 list_years = ["2015","2016","2017","2018","2019","2020","2021"] # 下载所需要的年份年报
 data  = {
