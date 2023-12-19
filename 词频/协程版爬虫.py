@@ -282,7 +282,12 @@ def getNumber():#获取xls文件内的公司代码
 async def main():
     # 限制并发量为10
     semaphore = asyncio.Semaphore(10)
-    Session =  aiohttp.ClientSession()
+    Conn = aiohttp.TCPConnector(limit=100,limit_per_host=5)
+    Session =  aiohttp.ClientSession(connector = Conn)
+    """
+    limit是最多连接的不同host数，
+    limit_per_host同一host最多连接数。
+    """
     Sem.set(semaphore)
     s.set(Session)
     org_dict = await get_orgid()
@@ -304,7 +309,7 @@ s =   contextvars.ContextVar("session")
 base_dir = "出口上市公司年报/"# 下载的年报存放的文件夹
 dir_error = "存在问题年报/"#需要手动核实问题的年报存放的文件夹
 file_name = "已下载公司代码.txt"#记录年报的下载进度
-file_name_xls = ""#股票代码.xlsx
+file_name_xls = "股票代码.xlsx"#股票代码.xlsx
 download_Progress = readTxt()# 读取已下载进度
 list_years = ["2015","2016","2017","2018","2019","2020","2021"] # 下载所需要的年份年报
 data  = {
