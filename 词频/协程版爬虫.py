@@ -1,5 +1,5 @@
 
-import requests,time,json
+import time,json
 import csv,os,re
 import math
 import asyncio,aiohttp
@@ -239,11 +239,14 @@ async def thread_(org_dict,list_years):# 多进程调用req函数
             await asyncio.wait(task_list)
 
     
-def get_orgid():#获取A股公司代码对应的OrgId,用于构造表单数据
+async def get_orgid():#获取A股公司代码对应的OrgId,用于构造表单数据
+    session = s.get()
     org_dict = {}
     while True:
         try:
-            org_json = requests.get("http://www.cninfo.com.cn/new/data/szse_stock.json").json()["stockList"]
+            #async with semaphore:
+            async with session.get("http://www.cninfo.com.cn/new/data/szse_stock.json") as req:
+                    org_json = json.loads(await req.text())["stockList"]
             break
         except Exception as e:
             print("获取公司代码失败60秒后重试",e)
@@ -282,6 +285,7 @@ async def main():
     Session =  aiohttp.ClientSession()
     Sem.set(semaphore)
     s.set(Session)
+    org_dict = await get_orgid()
     await thread_(org_dict,list_years)
     chekData(len(list_years))# 检查已下载公司年报数量是否足够
     await Session.session.close()# 关闭session
@@ -300,7 +304,7 @@ s =   contextvars.ContextVar("session")
 base_dir = "出口上市公司年报/"# 下载的年报存放的文件夹
 dir_error = "存在问题年报/"#需要手动核实问题的年报存放的文件夹
 file_name = "已下载公司代码.txt"#记录年报的下载进度
-file_name_xls = "股票代码.xlsx"#股票代码.xlsx
+file_name_xls = ""#股票代码.xlsx
 download_Progress = readTxt()# 读取已下载进度
 list_years = ["2015","2016","2017","2018","2019","2020","2021"] # 下载所需要的年份年报
 data  = {
@@ -320,7 +324,7 @@ data  = {
 
 if file_name_xls != '':
     list_number = getNumber()#获取出口上市公司.xls文件内的公司代码，下载出口上市公司年报
-org_dict = get_orgid()
+
 
 if __name__ == '__main__':
 
