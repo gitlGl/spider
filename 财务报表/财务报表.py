@@ -101,11 +101,12 @@ def get_data_json(number):
     print(url)
     while True:
         try:
-            data_json = requests.get(url).json()
-            result = data_json['result']
-            if result is None:
-                return None
-            break   
+            with session.get(url) as req: 
+                data_json =  req.json()
+                result = data_json['result']
+                if result is None:
+                    return None
+                break   
         except Exception as e:
            print("请求失败，稍后重试")
            time.sleep(60)
@@ -253,6 +254,8 @@ download_Progress = readTxt(file_name)# 读取已爬取进度
 
 财报表类型 = (("RPT_DMSK_FN_INCOME","利润表"),("RPT_DMSK_FN_CASHFLOW","现金流量表"),
 ("RPT_DMSK_FN_BALANCE","资产负债表"),("RPT_LICO_FN_CPD","业绩报表"))
+
+session = requests.session()
 
 财报表类型元组 :tuple = None
 财报类型 = '"001"'
