@@ -274,14 +274,19 @@ def readTxt():# 读取已下载的公司代码
     1.假设需要下载分类为农业行业的上市公司年报，需要把'trade': '',设置为对应的值，且设置file_name_xls = "",
     2.假设需要下载特定公司年报，设置file_name_xls = "公司年代码.xls",设置'trade': '','plate': '',#该参数为股市板块为空
 """
-
+ #for (prefix, adapter) in self.adapters.items():
 session = requests.session()
 session.mount('https://', requests.adapters.HTTPAdapter(pool_connections=100, pool_maxsize=5))
 """
 HTTPAdapter()默认参数为
-pool_connections=10, pool_maxsize=10, max_retries=0, pool_block=False
-pool_connections是最多连接的不同host数，
-pool_maxsize同一host最多连接数。
+pool_connections=10, pool_maxsize=10, max_retries=3, pool_block=False
+pool_connections链接池数量
+pool_maxsize链接池内tcp链接数量
+每个HTTPAdapter下可持有多个链接池
+假如xx.com,作为mount参数，则xx.xxx.com等二级域名匹配到xx.com映射的匹配器下
+每个二级域名为一个连接池，
+xx.com被匹配到'https://'映射的匹配器下
+max_retries=3链接重试次数
 """
 lock = threading.Lock()
 base_dir = "出口上市公司年报/"# 下载的年报存放的文件夹

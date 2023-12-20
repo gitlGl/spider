@@ -266,3 +266,4 @@ countdown(5)
 for item in 财报表类型:
     财报表类型元组 = item
     main()
+    session.close()
