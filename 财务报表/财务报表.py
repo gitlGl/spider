@@ -1,5 +1,5 @@
 import requests,os
-import xlrd,time, signal,sys
+import time, signal,sys
 from openpyxl import load_workbook
 from openpyxl.utils.dataframe import dataframe_to_rows
 #os.chdir(sys.path[0])
@@ -68,20 +68,13 @@ def check(number):#检查xls文件格式，调整文件内容
         return tem
     else:
         print("格式错误：",number)
-def get_number(file_name_xls):#获取xls文件内的公司代码
-    list_number = []
-    with xlrd.open_workbook(file_name_xls) as book:
-        sheets = book.sheets()
-        for sheet in sheets:
-            rows = sheet.nrows
-            for i in range(1, rows):
-                list1 = sheet.row_values(rowx=i)
-                number = check(list1[0])
-                if number == None:
-                    continue
-                else:
-                    list_number.append(number)
-    return list_number
+def getNumber():#获取xls文件内的公司代码
+    # 加载 Excel 文件
+    workbook = load_workbook(file_name_xls)
+    # 选择第一个工作表
+    sheet = workbook.active
+    return [cell.value for cell in sheet['A'] if check(cell.value) ]
+
 
 def get_data_json(number):
     number = '"' + number + '"'
@@ -168,7 +161,7 @@ def get_data(number):
 
 
 def main():
-    list_number = get_number(file_name_xls)
+    list_number = getNumber()
     book = load_workbook(财务表路径)
     flag = 0#程序退出标志
     def signal_handler(sig, frame):
@@ -261,7 +254,7 @@ session = requests.session()
 财报类型 = '"001"'
 业绩报表财报类型 = '"年报"'
 财务表路径 = "财务表.xlsx"
-file_name_xls = "股票代码.xls"#需要下载的公司代码所在的xls文件,出口上市公司.xls
+file_name_xls = "股票代码.xlsx"#需要下载的公司代码所在的xls文件,出口上市公司.xls
 
 print("退出请按ctrl + C，请勿强制退出，否则导致数据损坏")
 

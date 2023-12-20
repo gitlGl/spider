@@ -270,13 +270,14 @@ def check(number):#检查xls文件格式，调整文件内容
         return tem
     else:
         print("格式错误：",number)
+        #return False
 
 def getNumber():#获取xls文件内的公司代码
     # 加载 Excel 文件
     workbook = load_workbook(file_name_xls)
     # 选择第一个工作表
     sheet = workbook.active
-    return [cell.value for cell in sheet['A']]
+    return [cell.value for cell in sheet['A'] if check(cell.value) ]
 
 
 async def main():

@@ -247,7 +247,7 @@ def getNumber():#获取xls文件内的公司代码
     workbook = load_workbook(file_name_xls)
     # 选择第一个工作表
     sheet = workbook.active
-    return [cell.value for cell in sheet['A']]
+    return [cell.value for cell in sheet['A'] if check(cell.value) ]
 
 def main():
 
