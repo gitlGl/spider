@@ -218,8 +218,9 @@ def get_orgid():#获取A股公司代码对应的OrgId,用于构造表单数据
     org_dict = {}
     while True:
         try:
-            org_json = requests.get("http://www.cninfo.com.cn/new/data/szse_stock.json").json()["stockList"]
-            break
+            with session.get("http://www.cninfo.com.cn/new/data/szse_stock.json") as req:
+                org_json = json.loads(req.text)["stockList"]
+                break#退出with后归还连接池链接
         except Exception as e:
             print("获取公司代码失败60秒后重试",e)
             time.sleep(61)
@@ -274,20 +275,56 @@ def readTxt():# 读取已下载的公司代码
     1.假设需要下载分类为农业行业的上市公司年报，需要把'trade': '',设置为对应的值，且设置file_name_xls = "",
     2.假设需要下载特定公司年报，设置file_name_xls = "公司年代码.xls",设置'trade': '','plate': '',#该参数为股市板块为空
 """
- #for (prefix, adapter) in self.adapters.items():
 session = requests.session()
-session.mount('https://', requests.adapters.HTTPAdapter(pool_connections=100, pool_maxsize=5))
+adapter = requests.adapters.HTTPAdapter(pool_connections=100, pool_maxsize=5)
+session.mount('https://', adapter)
 """
+requests使用了urlib3模块，类似urlib3的模块有很多，HTTPAdapter对象支持切换到类似urlib3的模块上。
+加入要切换到httplib2模块，要换模块需要自定义Adapter对象，且继承baseAdapter，Adapter里面写httplib2相关代码。
+
 HTTPAdapter()默认参数为
-pool_connections=10, pool_maxsize=10, max_retries=3, pool_block=False
-pool_connections链接池数量
-pool_maxsize链接池内tcp链接数量
-每个HTTPAdapter下可持有多个链接池
-假如xx.com,作为mount参数，则xx.xxx.com等二级域名匹配到xx.com映射的匹配器下
-每个二级域名为一个连接池，
-xx.com被匹配到'https://'映射的匹配器下
-max_retries=3链接重试次数
+pool_connections=10, pool_maxsize=10, max_retries=0, pool_block=False
+pool_connections这个参数表示池的数量，一个host为一个池，host通常为域名或ip地址+端口，一个域名可有多个ip
+pool_maxsize表示一个连接池（host）可以有多个链接，同一个设备可与host建立多个链接
+这两个参数实质源自urlib3中poolmagager的参数(num_pools,maxsize)。poolmagager对象用于管理连接池
+
 """
+"""
+ 所有'https://'开头的url均匹配到adapter适配器中
+ 
+ adapter2 = requests.adapters.HTTPAdapter(pool_connections=100, pool_maxsize=5)
+ session.mount('https://baidu.com', adapter)
+ 则所有https://baidu.com开头的url匹配到adapter2适配器中
+ 因为https://baidu.com仅仅一个host，所以对应的adapter中只有一个连接池
+ session.mount源码如下
+ 
+    def mount(self, prefix, adapter):
+        #Registers a connection adapter to a prefix.
+        #Adapters are sorted in descending order by prefix length.
+      
+        self.adapters[prefix] = adapter#self.adapters为ordedict对象
+        keys_to_move = [k for k in self.adapters if len(k) < len(prefix)]
+
+        for key in keys_to_move:
+            self.adapters[key] = self.adapters.pop(key)
+   adapter与url匹配过程代码        
+    def get_adapter(self, url):
+            
+        #Returns the appropriate connection adapter for the given URL.
+
+        #:rtype: requests.adapters.BaseAdapter
+       
+        for (prefix, adapter) in self.adapters.items():
+
+            if url.lower().startswith(prefix.lower()):
+                return adapter
+
+        # Nothing matches :-/
+        raise InvalidSchema(f"No connection adapters were found for {url!r}")
+ 
+"""
+
+
 lock = threading.Lock()
 base_dir = "出口上市公司年报/"# 下载的年报存放的文件夹
 dir_error = "存在问题年报/"#需要手动核实问题的年报存放的文件夹
@@ -314,6 +351,6 @@ if file_name_xls != "":
 org_dict = get_orgid()
 if __name__ == '__main__':    
    main()
-   session.close()
+   session.close()#清理资源(连接池等)
 
 

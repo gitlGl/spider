@@ -286,8 +286,11 @@ async def main():
     Conn = aiohttp.TCPConnector(limit=100,limit_per_host=5)
     Session =  aiohttp.ClientSession(connector = Conn)
     """
-    limit是最多连接的不同host数，
-    limit_per_host同一host最多连接数。
+    默认limit=100,limit_per_host=0
+    limit为session回话中连接数总量，若为0则表示不限制
+    limit_per_host同一host最多连接数。若为0则表示不限制
+    aiohttp中没有依赖其他网络模块，所以也没有HTTPAdapter概念
+    
     """
     Sem.set(semaphore)
     s.set(Session)
