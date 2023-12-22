@@ -276,7 +276,7 @@ def readTxt():# 读取已下载的公司代码
     2.假设需要下载特定公司年报，设置file_name_xls = "公司年代码.xls",设置'trade': '','plate': '',#该参数为股市板块为空
 """
 session = requests.session()
-adapter = requests.adapters.HTTPAdapter(pool_connections=100, pool_maxsize=5)
+adapter = requests.adapters.HTTPAdapter(pool_connections=100, pool_maxsize=5,pool_block = True)
 session.mount('https://', adapter)
 """
 requests使用了urlib3模块，类似urlib3的模块有很多，HTTPAdapter对象支持切换到类似urlib3的模块上。
@@ -284,9 +284,19 @@ requests使用了urlib3模块，类似urlib3的模块有很多，HTTPAdapter对�
 
 HTTPAdapter()默认参数为
 pool_connections=10, pool_maxsize=10, max_retries=0, pool_block=False
-pool_connections这个参数表示池的数量，一个host为一个池，host通常为域名或ip地址+端口，一个域名可有多个ip
-pool_maxsize表示一个连接池（host）可以有多个链接，同一个设备可与host建立多个链接
-这两个参数实质源自urlib3中poolmagager的参数(num_pools,maxsize)。poolmagager对象用于管理连接池
+pool_connections这个参数表示池的数量，这个池的数量是一个缓存的概念，
+一个host为一个池，host通常为域名或ip地址+端口，一个域名可有多个ip，
+假设参数为2，当建立有第三个host的时候，新建一个池加入连接池中，第一个host的连接池会被移除，移除只是逻辑移除，
+在使用的链接不会受影响。只是不会再得到复用。
+pool_maxsize表示一个连接池（host）可以有多个链接，同一个设备可与host建立多个链接,
+pool_block 这个参数为True时候，当池中所有链接都在使用中，会阻塞等待，为Flase时候会新建一个链接使用，但这个链接不会加入池中
+这三个个参数实质源自urlib3中poolmagager的参数(num_pools,maxsize)。poolmagager对象用于管理连接池
+
+阅读源代码确实学到一些使用技巧，比如链接池中取链接，归还链接就有一个技巧。
+
+有一点是requests.get()这种使用方式背后还是会建立session，
+建立连接池，只是使用完后session中的资源会被全部释放，所以不建议使用类似requests.get()的使用方法，
+这种方法会有很多多余操作，且链接得不到复用，导致效率低下，当然无论如何瓶颈还是网络io。
 
 """
 """
@@ -296,8 +306,8 @@ pool_maxsize表示一个连接池（host）可以有多个链接，同一个设�
  session.mount('https://baidu.com', adapter)
  则所有https://baidu.com开头的url匹配到adapter2适配器中
  因为https://baidu.com仅仅一个host，所以对应的adapter中只有一个连接池
- session.mount源码如下
  
+ session.mount源码如下
     def mount(self, prefix, adapter):
         #Registers a connection adapter to a prefix.
         #Adapters are sorted in descending order by prefix length.
@@ -307,7 +317,7 @@ pool_maxsize表示一个连接池（host）可以有多个链接，同一个设�
 
         for key in keys_to_move:
             self.adapters[key] = self.adapters.pop(key)
-   adapter与url匹配过程代码        
+   adapter与url匹配过程源代码        
     def get_adapter(self, url):
             
         #Returns the appropriate connection adapter for the given URL.

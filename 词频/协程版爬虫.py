@@ -290,7 +290,7 @@ async def main():
     limit为session回话中连接数总量，若为0则表示不限制
     limit_per_host同一host最多连接数。若为0则表示不限制
     aiohttp中没有依赖其他网络模块，所以也没有HTTPAdapter概念
-    
+    概念上比request简单很多，糟糕但是requests没有类型注解，无法借助ide获取的信息
     """
     Sem.set(semaphore)
     s.set(Session)
