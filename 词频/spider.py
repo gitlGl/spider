@@ -17,25 +17,27 @@ def chekData(number):# 检查已下载公司年报数量是否足够
                 print("年报数量不足请检查："+root)
 
 def download(url_item):# 下载年报
-    fname = open(file_name, "a")
+
     for url in url_item:
         if url['number']+url['year'] in download_Progress:
             print(f"{ url['number']+url['year']}已下载过，跳过") # 打印进度
             continue
         while True:
             try:
-                    with  session.get(url['url'])  as r:
-                        break
+                with  session.get(url['url'],stream=True)  as r:
+                    if not os.path.exists(base_dir+ url['number'] +'/'):
+                        os.makedirs(base_dir+ url['number'] +'/' )
+                    with open(base_dir+ url['number'] +'/'+url['number']+ "-" + url['year'] + "-" +url['name']+  ".pdf", "wb") as f:
+                        for chunk in r.iter_content(1024*1024*1024*3):
+                            f.write(chunk)                    
+                        print(f"{url['number']}-{url['year']}年报下载完成！") # 打印进度
+                    with open(file_name, "a") as fname:
+                        fname.write(url['number']+url['year'] +'\n') # 将内容追加到到文件尾部
+                break
             except:
                 print("请求失败，正在重试")
-        if not os.path.exists(base_dir+ url['number'] +'/'):
-            os.makedirs(base_dir+ url['number'] +'/' )
-        with open(base_dir+ url['number'] +'/'+url['number']+ "-" + url['year'] + "-" +url['name']+  ".pdf", "wb") as f:
-            f.write(r.content)                    
-            print(f"{url['number']}-{url['year']}年报下载完成！") # 打印进度
-        with open(file_name, "a") as fname:
-            fname.write(url['number']+url['year'] +'\n') # 将内容追加到到文件尾部
-    fname.close()
+        
+    
 
 def downloadError(url,number,name):# 存在公司年报不带年份下载到“存在问题年报文件夹”文件夹
     while True:
@@ -280,7 +282,7 @@ adapter = requests.adapters.HTTPAdapter(pool_connections=100, pool_maxsize=5,poo
 session.mount('https://', adapter)
 """
 requests使用了urlib3模块，类似urlib3的模块有很多，HTTPAdapter对象支持切换到类似urlib3的模块上。
-加入要切换到httplib2模块，要换模块需要自定义Adapter对象，且继承baseAdapter，Adapter里面写httplib2相关代码。
+假如要切换到httplib2模块，要换模块需要自定义Adapter对象，且继承baseAdapter，Adapter里面写httplib2相关代码。
 
 HTTPAdapter()默认参数为
 pool_connections=10, pool_maxsize=10, max_retries=0, pool_block=False

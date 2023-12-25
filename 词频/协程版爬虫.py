@@ -28,18 +28,18 @@ async def downlaodTask(item):
         try:
             async with semaphore:
                 async with session.get(url=item['url']) as req:
-                    content = await req.read()
-                    break
+                    if not os.path.exists(base_dir+ item['number'] +'/'):
+                        os.makedirs(base_dir+ item['number'] +'/' )
+                    with open(base_dir+ item['number'] +'/'+item['number']+ "-" + item['year'] + "-" +item['name']+  ".pdf", "wb") as f:
+                        async for chunk in req.content.iter_chunked(1024*1024*1024*3):
+                            f.write(chunk)                       
+                    print(f"{item['number']}-{item['year']}年报下载完成！") # 打印进度 
+                    with open(file_name, 'a+') as writers: # 打开文件
+                        writers.write(item["number"] + item['year'] +'\n') # 将内容追加到到文件尾部
+            break    
         except Exception as e:
             print("请求失败，正在重试",e)
             time.sleep(60)
-    if not os.path.exists(base_dir+ item['number'] +'/'):
-        os.makedirs(base_dir+ item['number'] +'/' )
-    with open(base_dir+ item['number'] +'/'+item['number']+ "-" + item['year'] + "-" +item['name']+  ".pdf", "wb") as f:
-        f.write(content)                       
-    print(f"{item['number']}-{item['year']}年报下载完成！") # 打印进度 
-    with open(file_name, 'a+') as writers: # 打开文件
-        writers.write(item["number"] + item['year'] +'\n') # 将内容追加到到文件尾部
 
 async def download(url_item):# 下载年报
     task_list = []
