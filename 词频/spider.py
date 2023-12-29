@@ -140,7 +140,7 @@ def pageDownload(year,pageNum,req):
             fname.write(f"{year + pageNum}\n") # 将内容追加到到文件尾部
 
 
-def get_pages(url,headers,data_):
+def get_pages(url,data_):
     while True:
         try:
                 with session.post(url,data=data_,headers=headers) as req:
@@ -170,9 +170,9 @@ def req(year,org_dict,number = ''): # 传入年份，机构字典，股票代码
         data_["stock"] = number + "," + org_dict[number]
         
     # 请求头
-    headers =  {"User-Agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 Safari/537.36"}
+    
     # 发起请求
-    pages = get_pages(url,headers,data_)+1
+    pages = get_pages(url,data_)+1
     if pages > 2:
         print(f"共{pages-1}页")
     if file_name_xls != "":
@@ -335,7 +335,7 @@ pool_block 这个参数为True时候，当池中所有链接都在使用中，�
         raise InvalidSchema(f"No connection adapters were found for {url!r}")
  
 """
-
+headers =  {"User-Agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 Safari/537.36"}
 
 lock = threading.Lock()
 base_dir = "出口上市公司年报/"# 下载的年报存放的文件夹
