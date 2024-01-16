@@ -1,17 +1,12 @@
 import pandas as pd
 import numpy as np 
 import matplotlib.pyplot as plt
-import multiprocessing
 from sklearn.linear_model import LinearRegression
 from sklearn.metrics import mean_squared_error
 plt.rcParams['font.sans-serif'] = ['SimHei']
 plt.rcParams['axes.unicode_minus'] = False
 
-def 散点图():
-    
-    # 从CSV文件中读取数据
-    df = pd.read_csv('data.csv')
-
+def 散点图(df):
     # 将时间列转换为时间戳类型
     df['时间'] = pd.to_datetime(df['时间'],format="%Y-%m-%d")
 
@@ -22,19 +17,15 @@ def 散点图():
     x = sorted_df['时间'].head(100)
     y = sorted_df['播放量'].head(100)
     
-
     # 绘制散点图
     plt.figure(figsize=(10, 10))
     plt.scatter(x, y)
     plt.xlabel('时间')
     plt.ylabel('播放量')
     plt.title('按时间排序前100个数据')
-    plt.show()
+  
 
-def 饼图():
-#从CSV文件中读取数据
-    df = pd.read_csv('data.csv')
-
+def 饼图(df):
     # 对'视频分类'列进行分组
     grouped = df.groupby('视频分类').size()
 
@@ -51,14 +42,8 @@ def 饼图():
     plt.title('视频分类',color = "blue",fontweight = 'bold')
     plt.axis('equal')  # 使饼状图为正圆形
 
-    plt.show()
-    
-    
-def 柱形图():
-    
-    # 读取CSV文件
-    df = pd.read_csv('data.csv')
-
+      
+def 柱形图(df):
     # 按照需要排序的列进行排序
     df_sorted = df.sort_values(by='播放量',ascending=False)
 
@@ -74,13 +59,7 @@ def 柱形图():
     plt.xlabel('UP主')
     plt.title('top30播放量')
 
-    # 显示图形
-    plt.show()
-    
-def 折线图():
-        # 读取CSV文件
-    df = pd.read_csv('data.csv')
-
+def 折线图(df):
     # 按照指定列进行分组并求和
     summed = df.groupby('视频分类')['收藏'].sum()
 
@@ -97,15 +76,10 @@ def 折线图():
     plt.ylabel('收藏数量')
     plt.title('top30分类收藏')
 
-    # 显示图形
-    plt.show()
         
-def 回归():
-  # 读取CSV文件
-    df = pd.read_csv('data.csv')
-
+def 回归(df):
     # 提取需要分析的列数据
-    x = df[ '点赞'].values.reshape(-1, 1)  # 提取多个列数据
+    x = df[ '收藏'].values.reshape(-1, 1)  # 提取多个列数据
     y = df['播放量'].values
 
     # 创建线性回归模型
@@ -130,7 +104,7 @@ def 回归():
     # 绘制线性回归分析图
     ax1.scatter(x, y, color='blue', label='真实值')
     ax1.plot(x, yfit, color='red', linewidth=2, label='线性回归线')
-    ax1.set_xlabel('点赞')
+    ax1.set_xlabel('收藏')
     ax1.set_ylabel('播放量')
     ax1.set_title('线性回归分析')
     ax1.legend()
@@ -143,25 +117,18 @@ def 回归():
     ax2.set_title('30个真实值与预测值比较')
     ax2.legend()
 
-    # 显示图形
-    plt.show()
     
 
 
 if __name__ == '__main__':
-    function = [散点图,折线图,饼图,柱形图,回归]
-    processes = []  # 存放进程对象的列表
-    
-    # 创建并启动进程
-    for f in function:
-        p = multiprocessing.Process(target=f)
-        processes.append(p)
-        p.start()
-
-    # 等待所有进程完成
-    for p in processes:
-        p.join()
-
+    df = pd.read_csv('data.csv')
+    散点图(df)
+    折线图(df)
+    饼图(df)
+    柱形图(df)
+    回归(df)
+    plt.show()
+   
 
 
 
