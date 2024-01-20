@@ -29,14 +29,14 @@ def get_po_num(local_file,sheet_name):
     return [str(cell.value) for cell in sheet['A'] if cell.value ]
 
 def get_number(tem_number):  
-    string = r"-_\/%+|=. ;:*?"
+    
     number = ''
     for i in tem_number:
-        if i in string:
-            break
         if not i.isdigit():
             continue
         number = number + i
+        if len(number) == 9:
+            return number
     return number
   
   
