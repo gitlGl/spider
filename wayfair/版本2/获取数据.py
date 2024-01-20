@@ -3,12 +3,12 @@ from playwright.sync_api import Playwright, sync_playwright
 from openpyxl import load_workbook
 import time,os,random,csv,math
 from decimal import Decimal
-
+from copy import deepcopy
 current_file_path = os.path.abspath(__file__)
 os.chdir(os.path.dirname(current_file_path))  
 
 def random_sleep(min_time, max_time):
-    sleep_time = random.randint(min_time, max_time)
+    sleep_time = random.uniform(min_time, max_time)
     time.sleep(sleep_time)
     
 
@@ -28,10 +28,11 @@ def get_po_num(local_file,sheet_name):
     sheet = sheet = workbook[sheet_name]
     return [str(cell.value) for cell in sheet['A'] if cell.value ]
 
-def get_number(tem_number):
+def get_number(tem_number):  
+    string = r"-_\/%+|=. ;:*?"
     number = ''
     for i in tem_number:
-        if i == "_" or i == "-":
+        if i in string:
             break
         if not i.isdigit():
             continue
@@ -60,14 +61,30 @@ def clear_row_data(local_file,sheet_name,row_data_file,
         row_data_list.remove(i)
         
     for key,value in data_dic.items():
+        target = []
+        copy_value = deepcopy(value)
+        pop = []
+        for i in copy_value:
+            i.pop(4)
+            pop.append(deepcopy(i))
+            
+        set__ = set()
+        for i in pop:
+            if "".join(i) not in set__:
+                set__.add("".join(i))
+            else:
+                target.append("可能存在问题")
+            
+                
         sum_money = sum([Decimal(data[-2][1:].replace(",","")) for data in  value if data] )
         sum_money = float(sum_money)
-        
+        target.insert(0,str(sum_money))
+        target.insert(0,key)
         with open(server_file,"a+",newline = '') as csv_f:
-            csv.writer(csv_f).writerow([key,str(sum_money)]) 
+            csv.writer(csv_f).writerow(target) 
                                 
         with open(detail_data_file,"a+",newline = '') as csv_f:
-            csv.writer(csv_f).writerow([key,str(sum_money)])
+            csv.writer(csv_f).writerow(target)
             for i in value:
                 csv.writer(csv_f).writerow(i)
 
@@ -117,8 +134,6 @@ def run(playwright: Playwright,sheet_names) -> None:
         list_number = get_po_num(local_file,sheet_name)
         set_data = get_set_data(row_data_file)
         
-       
-        
         for po_number in list_number[:]:
             if po_number in process_num:
                 list_number.remove(po_number)
@@ -133,7 +148,7 @@ def run(playwright: Playwright,sheet_names) -> None:
                 break
             except Exception as e :
                 print("异常网络，重试",e.__traceback__.tb_lineno,e)
-                random_sleep(1,2)
+                random_sleep(0.6,1)
     
     
         for po_number in list_number:
@@ -179,18 +194,18 @@ def run(playwright: Playwright,sheet_names) -> None:
                         if count > 100:
                             count = 0
                             break
-                        random_sleep(1,2)
+                        random_sleep(0.6,1)
                         continue
                 
                     with open(process_file, "a") as f:
                         f.write(f"{po_number}\n") # 将内容追加到到文件尾部
                     print(f"进度{po_number}")
-                    random_sleep(1,2)
+                    random_sleep(0.6,1)
                     break                  
                 
                 except Exception as e:
                     print("异常网络，重试",e.__traceback__.tb_lineno,e,e.__traceback__.tb_frame)
-                    random_sleep(1,2)
+                    random_sleep(0.6,1)
                     page.locator('input[name="poNumber"]').clear()
                     
         with open("sheet_name.txt", "a+",encoding="utf8") as f:
@@ -215,7 +230,7 @@ def run(playwright: Playwright,sheet_names) -> None:
 
 
 if "__main__" == __name__:
-    local_file = "测试.xlsx"
+    local_file = "Testing11.20-11.30.xlsx"
     workbook = load_workbook(local_file)
     sheet_names = workbook.sheetnames
     

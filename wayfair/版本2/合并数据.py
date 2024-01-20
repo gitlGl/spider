@@ -21,7 +21,7 @@ def get_data(server_file):
         for row in reader:
             if len(row)<2:
                 print(row)
-            list_data.append(float(row[1]))
+            list_data.append(row)
         return list_data
 def mer(sheet_names):
    for sheet_name in sheet_names:
@@ -35,14 +35,25 @@ def mer(sheet_names):
 
         for index,(server_data,local_data) in enumerate(zip(server_datas,local_datas),start=1):
             # 指定行列插入数据
-            sheet.cell(row=index, column=4, value=server_data)
+            server_data__ =  float(server_data[1])
+            fill_green = PatternFill(fill_type='solid', fgColor='2edfa3')  # 绿色填充
+            fill_red = PatternFill(fill_type='solid', fgColor='ed5a65')  # 绿色填充
             
-            if server_data < local_data*0.905:
+            if len(server_data)>2:
+                 #填充行为红色
+                sheet.cell(row=index, column=5, value=server_data__)
+                for cell in sheet[index]:
+                    cell.fill = fill_red
+                continue
+                
+                
+            sheet.cell(row=index, column=5, value=server_data__)
+            
+            if server_data__ < local_data*0.905:
                 # 创建填充对象并设置颜色
-                fill = PatternFill(fill_type='solid', fgColor='2edfa3')  # 绿色填充
                 #填充行为绿色
                 for cell in sheet[index]:
-                    cell.fill = fill
+                    cell.fill = fill_green
                 # sheet.cell(row=index, column=3).fill = fill
         
         workbook.save(local_file)
@@ -55,7 +66,7 @@ def readTxt(sheet_name_file):# 读取已下载的公司代码
         data = f.read().splitlines()
         return set(data)        
 if "__main__" == __name__:
-    local_file = "测试.xlsx"
+    local_file = "Testing11.20-11.30.xlsx"
     sheet_names = readTxt("sheet_name.txt")
     mer(sheet_names)
     print("合并完成")
