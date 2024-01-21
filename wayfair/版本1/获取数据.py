@@ -80,7 +80,7 @@ def run(playwright: Playwright,sheet_names) -> None:
                     page.locator('input[name="poNumber"]').fill(po_number)
                     page.locator('button:text("Search")').click()
                     page.wait_for_load_state("networkidle")
-                    random_sleep(0.8,1)
+                    random_sleep(2,3)
                     
                     div_rt_tbody = page.query_selector('div.rt-tbody')  
                     div_rt_tr_groups = div_rt_tbody.query_selector_all('div.rt-tr-group')
@@ -95,8 +95,9 @@ def run(playwright: Playwright,sheet_names) -> None:
                                 tem_text = item.text_content()
                                 print(tem_text)
                                 tem_number = get_number(tem_text)
-                                print("tem_number:",tem_number," ",po_number[2:])
+                               
                                 if tem_number != po_number[2:]:
+                                    print("tem_number:",tem_number," ",po_number[2:])
                                     flag.append(False)
                                 else: flag.append(True)
                                     

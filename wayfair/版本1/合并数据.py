@@ -6,11 +6,15 @@ current_file_path = os.path.abspath(__file__)
 os.chdir(os.path.dirname(current_file_path))  
 
 
-def get_po_num(local_file,sheet_name):
+def get_po_num(local_file,sheet_name,coulum):
     # 加载 Excel 文件
     workbook = load_workbook(local_file)
     sheet = sheet = workbook[sheet_name]
-    return [ float(cell.value) if  cell.value else 0 for cell in sheet['C'] ]
+    if coulum == "C":
+        return [ float(cell.value) if  cell.value else 0 for cell in sheet[coulum] ]
+    if coulum == "A":
+        return [ cell.value  for cell in sheet[coulum] ]
+        
 
 # 获取CSV文件数据
 def get_data(server_file):
@@ -28,14 +32,18 @@ def mer(sheet_names):
         server_file = f"{sheet_name}.csv"
 
         server_datas = get_data(server_file)
-        local_datas = get_po_num(local_file,sheet_name)
-
+        local_datas = get_po_num(local_file,sheet_name,"C")
+        list_number =  get_po_num(local_file,sheet_name,"A")
         workbook = load_workbook(local_file)
         sheet = workbook[sheet_name]
 
         for index,(server_data,local_data) in enumerate(zip(server_datas,local_datas),start=1):
             # 指定行列插入数据
-            sheet.cell(row=index, column=4, value=server_data)
+            if list_number[index-1] is None:
+                row =  index + 1
+            else :
+                row = index
+            sheet.cell(row=row, column=4, value=server_data)
             
             if server_data < local_data*0.91:
                 # 创建填充对象并设置颜色

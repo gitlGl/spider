@@ -6,11 +6,15 @@ current_file_path = os.path.abspath(__file__)
 os.chdir(os.path.dirname(current_file_path))  
 
 
-def get_po_num(local_file,sheet_name):
+def get_po_num(local_file,sheet_name,coulum):
     # 加载 Excel 文件
     workbook = load_workbook(local_file)
     sheet = sheet = workbook[sheet_name]
-    return [ float(cell.value) if  cell.value else 0 for cell in sheet['C'] ]
+    if coulum == "C":
+        return [ float(cell.value) if  cell.value else 0 for cell in sheet[coulum] ]
+    if coulum == "A":
+        return [ cell.value  for cell in sheet[coulum] ]
+        
 
 # 获取CSV文件数据
 def get_data(server_file):
@@ -28,26 +32,31 @@ def mer(sheet_names):
         server_file = f"{sheet_name}.csv"
 
         server_datas = get_data(server_file)
-        local_datas = get_po_num(local_file,sheet_name)
-
+        local_datas = get_po_num(local_file,sheet_name,"C")
+        list_numer = get_po_num(local_file,sheet_name,"A")
         workbook = load_workbook(local_file)
         sheet = workbook[sheet_name]
 
         for index,(server_data,local_data) in enumerate(zip(server_datas,local_datas),start=1):
             # 指定行列插入数据
+            if list_numer[index-1] is None:
+                row =  index + 1
+            else :
+                row = index
             server_data__ =  float(server_data[1])
             fill_green = PatternFill(fill_type='solid', fgColor='2edfa3')  # 绿色填充
             fill_red = PatternFill(fill_type='solid', fgColor='ed5a65')  # 绿色填充
             
             if len(server_data)>2:
                  #填充行为红色
-                sheet.cell(row=index, column=5, value=server_data__)
+                 
+                sheet.cell(row=row, column=5, value=server_data__)
                 for cell in sheet[index]:
                     cell.fill = fill_red
                 continue
                 
                 
-            sheet.cell(row=index, column=5, value=server_data__)
+            sheet.cell(row=row, column=5, value=server_data__)
             
             if server_data__ < local_data*0.905:
                 # 创建填充对象并设置颜色
