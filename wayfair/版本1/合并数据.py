@@ -13,8 +13,7 @@ def get_po_num(local_file,sheet_name,coulum):
     if coulum == "C":
         return [ float(cell.value) if  cell.value else 0 for cell in sheet[coulum] ]
     if coulum == "A":
-        return [ cell.value  for cell in sheet[coulum] ]
-        
+        return [ cell.value[2:] if cell.value else cell.value  for cell in sheet[coulum] ]
 
 # 获取CSV文件数据
 def get_data(server_file):
@@ -37,13 +36,12 @@ def mer(sheet_names):
         workbook = load_workbook(local_file)
         sheet = workbook[sheet_name]
 
-        for index,(server_data,local_data) in enumerate(zip(server_datas,local_datas),start=1):
+ 
+        for server_data,local_data in zip(server_datas,local_datas):
             # 指定行列插入数据
-            if list_number[index-1] is None:
-                row =  index + 1
-            else :
-                row = index
-            sheet.cell(row=row, column=4, value=server_data)
+            index = list_number.index(server_data[0]) + 1
+
+            sheet.cell(row=index, column=5, value=server_data)
             
             if server_data < local_data*0.91:
                 # 创建填充对象并设置颜色
