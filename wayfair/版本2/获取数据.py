@@ -148,7 +148,7 @@ def run(playwright: Playwright,sheet_names) -> None:
                 break
             except Exception as e :
                 print("异常网络，重试",e.__traceback__.tb_lineno,e)
-                random_sleep(0.6,1)
+                random_sleep(0.8,1)
     
     
         for po_number in list_number:
@@ -159,6 +159,7 @@ def run(playwright: Playwright,sheet_names) -> None:
                     page.locator('input[name="poNumber"]').fill(po_number)
                     page.locator('button:text("Search")').click()
                     page.wait_for_load_state("networkidle")
+                    random_sleep(0.8,1)
                     
                     div_rt_tbody = page.query_selector('div.rt-tbody')  
                     div_rt_tr_groups = div_rt_tbody.query_selector_all('div.rt-tr-group')
@@ -194,18 +195,18 @@ def run(playwright: Playwright,sheet_names) -> None:
                         if count > 100:
                             count = 0
                             break
-                        random_sleep(0.6,1)
+                       
                         continue
                 
                     with open(process_file, "a") as f:
                         f.write(f"{po_number}\n") # 将内容追加到到文件尾部
                     print(f"进度{po_number}")
-                    random_sleep(0.6,1)
+                   
                     break                  
                 
                 except Exception as e:
                     print("异常网络，重试",e.__traceback__.tb_lineno,e,e.__traceback__.tb_frame)
-                    random_sleep(0.6,1)
+                  
                     page.locator('input[name="poNumber"]').clear()
                     
         with open("sheet_name.txt", "a+",encoding="utf8") as f:
