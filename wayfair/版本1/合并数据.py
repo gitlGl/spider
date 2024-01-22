@@ -13,7 +13,7 @@ def get_po_num(local_file,sheet_name,coulum):
     if coulum == "C":
         return [ float(cell.value) if  cell.value else 0 for cell in sheet[coulum] ]
     if coulum == "A":
-        return [ cell.value[2:] if cell.value else cell.value  for cell in sheet[coulum] ]
+        return [ cell.value if cell.value else cell.value  for cell in sheet[coulum] ]
 
 # 获取CSV文件数据
 def get_data(server_file):

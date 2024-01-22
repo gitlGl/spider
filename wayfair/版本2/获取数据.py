@@ -133,6 +133,7 @@ def run(playwright: Playwright,sheet_names) -> None:
         process_num = readTxt(process_file)
         list_number = get_po_num(local_file,sheet_name)
         set_data = get_set_data(row_data_file)
+        importtance_may_error = get_set_data("重点核查数据.csv")
         
         for po_number in list_number[:]:
             if po_number in process_num:
@@ -185,9 +186,16 @@ def run(playwright: Playwright,sheet_names) -> None:
                                 string = "".join(data_)
                                 if string not in set_data:
                                     set_data.add(string)
-                                    with open(row_data_file,"a+",newline = '') as csv_f:
+                                    with open(row_data_file,"a+",newline = '') as csv_f1:
+                                        csv.writer(csv_f1).writerow(data_)
                                         
-                                        csv.writer(csv_f).writerow(data_)
+                                else:
+                                    if string not in importtance_may_error:
+                                        importtance_may_error.add(string)
+                                        with open("重点核查数据.csv","a+",newline = '') as csv_f2:
+                                            csv.writer(csv_f2).writerow(data_)
+                                            
+                                    
                 
                     if not tt or not flag:
                         count = count +1
