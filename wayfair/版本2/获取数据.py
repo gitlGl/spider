@@ -160,7 +160,7 @@ def run(playwright: Playwright,sheet_names) -> None:
                     page.locator('input[name="poNumber"]').fill(po_number)
                     page.locator('button:text("Search")').click()
                     page.wait_for_load_state("networkidle")
-                    random_sleep(2,3)
+                    random_sleep(0.5,1)
                     
                     div_rt_tbody = page.query_selector('div.rt-tbody')  
                     div_rt_tr_groups = div_rt_tbody.query_selector_all('div.rt-tr-group')
