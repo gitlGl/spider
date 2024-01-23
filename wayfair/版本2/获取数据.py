@@ -111,12 +111,13 @@ def get_set_data(fiel_path):
             return set_
         
 def get_text(page,po_number,set_data,row_data_file,error_data):
+    count = 0
     while True:
         div_rt_tbody = page.query_selector('div.rt-tbody')  
         div_rt_tr_groups = div_rt_tbody.query_selector_all('div.rt-tr-group')
         tt = []  
         data_list = []
-        count = 0
+       
         
         for div_rt_td in div_rt_tr_groups:
             div_datas = div_rt_td.query_selector_all('div.rt-td')
