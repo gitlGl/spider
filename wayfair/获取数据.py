@@ -1,7 +1,7 @@
 
 from playwright.sync_api import Playwright, sync_playwright
 from openpyxl import load_workbook
-import time,os,random,csv,sys
+import time,os,random,csv
 from decimal import Decimal
 from copy import deepcopy
 
@@ -111,12 +111,13 @@ def get_set_data(fiel_path):
             return set_
         
 def get_text(page,po_number,set_data,row_data_file,error_data):
+    count = 0
     while True:
         div_rt_tbody = page.query_selector('div.rt-tbody')  
         div_rt_tr_groups = div_rt_tbody.query_selector_all('div.rt-tr-group')
         tt = []  
         data_list = []
-        count = 0
+       
         
         for div_rt_td in div_rt_tr_groups:
             div_datas = div_rt_td.query_selector_all('div.rt-td')
@@ -161,43 +162,6 @@ def get_text(page,po_number,set_data,row_data_file,error_data):
             print(f" 尝试获取数据失败次数{po_number}：{count}")
             if count > 100:
                 return False
-def clear_data(page):
-    div_rt_tbody = page.query_selector('div.rt-tbody') 
-    div_rt_tr_groups = div_rt_tbody.query_selector_all('div.rt-tr-group')
-    
-    for i in div_rt_tr_groups:
-        div_datas = i.query_selector_all('div.rt-td')
-        for i2 in  div_datas:
-            i2.evaluate('(element) => element.textContent = ""')
-            
-    time.sleep(0.2)  
-        
-    count = 0  
-    while True:
-        tt = []
-        div_rt_tbody = page.query_selector('div.rt-tbody') 
-        div_rt_tr_groups = div_rt_tbody.query_selector_all('div.rt-tr-group')
-        
-        for i in div_rt_tr_groups:
-            div_datas = i.query_selector_all('div.rt-td')
-            
-            for i2 in  div_datas:
-               if i2.text_content() != "":
-                   tt.append(False)
-               else:
-                   tt.append(True)
-                   
-        if all(tt) and len(tt) != 0:
-            return True
-        
-        else:
-            count = count +1
-            time.sleep(0.2)  
-            
-            if count > 100:
-                print("程序出现错误")
-                sys.exit(0)
-                          
 
 def run(playwright: Playwright,sheet_names) -> None:
     browser = playwright.firefox.launch(headless=True)
@@ -234,13 +198,12 @@ def run(playwright: Playwright,sheet_names) -> None:
             count = 0
             while True:
                 try:
-                    clear_data(page)
                     page.locator('input[name="poNumber"]').clear()
                     page.locator('input[name="poNumber"]').fill(po_number)
                     page.locator('button:text("Search")').click()
                     page.wait_for_load_state("networkidle")
-                    random_sleep(0.5,1)
-                
+                    random_sleep(2.5,3)
+                    
                     flag = get_text(page,po_number,set_data,row_data_file,error_data)
                     
                     if flag:
