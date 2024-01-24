@@ -202,7 +202,7 @@ def run(playwright: Playwright,sheet_names) -> None:
                     page.locator('input[name="poNumber"]').fill(po_number)
                     page.locator('button:text("Search")').click()
                     page.wait_for_load_state("networkidle")
-                    random_sleep(0.5,1)
+                    random_sleep(2.5,3)
                     
                     flag = get_text(page,po_number,set_data,row_data_file,error_data)
                     
