@@ -18,7 +18,6 @@ def base62_decode(string):
 
     return num
 
-
 def reverse_cut_to_length(content, code_func, cut_num=4, fill_num=7):
     """
     url to mid
@@ -50,8 +49,6 @@ def parse_time(s):
     targets = datetime.datetime.strptime(s,"%a %b %d %H:%M:%S +0800 %Y")
     return targets
     
-
-
 def parse_user_info(data):
     """
     解析用户信息
@@ -76,7 +73,6 @@ def parse_user_info(data):
         if 'verified_reason' in data:
             user['verified_reason'] = data['verified_reason']
     return user
-
 
 def parse_tweet_info(data):
     """
@@ -117,7 +113,6 @@ def parse_tweet_info(data):
         tweet['retweet_id'] = data['retweeted_status']['mid']
     return tweet
 
-
 def parse_long_tweet(response):
     """
     解析长推文
@@ -126,7 +121,6 @@ def parse_long_tweet(response):
     item = response.meta['item']
     item['content'] = data['longTextContent']
     yield item
-
 
 def request_callback(url, callback):
     res = requests.get(headers=REQUEST_HEADERS,url=url)
@@ -164,8 +158,6 @@ def parse(response):
         yield request_callback(url, callback=parse)  
 
 
-
-
 def parse_tweet(response):
     """
     解析推文
@@ -179,7 +171,6 @@ def parse_tweet(response):
         yield request_callback(url, callback=parse_long_tweet)
     else:
         yield item
-
 
 name = "tweet_spider_by_keyword"
 base_url = "https://s.weibo.com/"
