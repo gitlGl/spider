@@ -65,10 +65,19 @@ def mer(sheet_names,colum_num):
                 for cell in sheet[index]:
                     cell.fill = fill_red
                 continue
+  
           
             if local_datas[index -1] is None:
                 continue
-           
+            
+                      
+            # if server_data__ > local_datas[index -1]*1.1:
+            #     #填充行为红色
+            #     for cell in sheet[index]:
+            #         cell.fill = fill_red
+            #         continue
+            
+      
             if server_data__ < local_datas[index -1]*0.905:
                 # 创建填充对象并设置颜色
                 #填充行为绿色
