@@ -3,7 +3,6 @@ import json
 import re
 import requests
 
-
 def parse_time(s):
     """
     Wed Oct 19 23:44:36 +0800 2022 => 2022-10-19 23:44:36
@@ -119,7 +118,6 @@ def parse(response):
         url = "https://s.weibo.com" + next_page.group(1)
         yield request_callback(url, callback=parse)  
 
-
 def parse_tweet(response):
     """
     解析推文
@@ -127,15 +125,11 @@ def parse_tweet(response):
     data = json.loads(response.text)
     item = parse_tweet_info(data)
     item['keyword'] = KEYWORD
-    print(item)
     if item['isLongText']:
         url = "https://weibo.com/ajax/statuses/longtext?id=" + item['mblogid']
         yield request_callback(url, callback=parse_long_tweet)
     else:
         yield item
-
-name = "tweet_spider_by_keyword"
-base_url = "https://s.weibo.com/"
 
 def start_requests():
     """
@@ -165,7 +159,6 @@ REQUEST_HEADERS = {
 }
 KEYWORD = ''
 
-
 # 这里keywords可替换成实际待采集的数据
 keywords = ['丽江',"测试"]
 # 这里的时间可替换成实际需要的时间段
@@ -178,4 +171,4 @@ if  __name__ == "__main__" :
     for i in start_requests():
         for i2 in i:
             for i3 in i2 :
-                ...
+                print(i3)
