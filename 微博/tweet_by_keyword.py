@@ -75,8 +75,7 @@ def parse_tweet_info(data):
     return tweet
 
 
-
-        
+    
 def parse(response):
     """
     网页解析
@@ -133,10 +132,11 @@ def start_requests():
                 yield request_callback(url, callback=parse)
                 time_cur = time_cur + datetime.timedelta(hours=1)
 def request_callback(url, callback=None):
-    res = requests.get(headers=REQUEST_HEADERS,url=url)
-    if not callable:
-        return res
     time.sleep(1)
+    res = requests.get(headers=REQUEST_HEADERS,url=url)
+    if  callback is None:
+        return res
+    
     return callback(res)                
 
 REQUEST_HEADERS = {
