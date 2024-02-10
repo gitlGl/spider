@@ -38,7 +38,7 @@ def start_requests():
     爬虫入口
     """
     # 这里tweet_ids可替换成实际待采集的数据
-    tweet_ids = ['4999611272662866']
+    tweet_ids = ["4999221734541821"]
     for tweet_id in tweet_ids:
         mid =tweet_id
         url = f"https://weibo.com/ajax/statuses/buildComments?" \
@@ -58,9 +58,9 @@ def parse(response,source_url):
             url = f"https://weibo.com/ajax/statuses/buildComments?is_reload=1&id={comment_info['id']}" \
                 f"&is_show_bulletin=2&is_mix=1&fetch_level=1&max_id=0&count=100"
             yield request_callback(url, callback=parse,source_url = url)
-    if data.get('max_id', 0) != 0 and 'fetch_level=1' not in source_url:
+    if data.get('max_id', 0) != 0 and 'fetch_level=1' not in response.url:
         url = source_url + '&max_id=' + str(data['max_id'])
-        yield request_callback(url, callback=parse, source_url = url)
+        yield request_callback(url, callback=parse, source_url =  source_url)
 
 
 def parse_comment(data):
@@ -84,21 +84,30 @@ def parse_comment(data):
     return item
 
 def request_callback(url, callback,source_url=None):
-    res = requests.get(headers=REQUEST_HEADERS,url=url)
-    time.sleep(1)
-    return callback(res,source_url)
+    while True:
+        try:
+            res = requests.get(headers=REQUEST_HEADERS,url=url)
+            
+            time.sleep(1)
+            return callback(res,source_url)
+        except Exception as e:
+            print(e,"llll")
+            time.sleep(2)
 
 REQUEST_HEADERS = {
     'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.13; rv:61.0) Gecko/20100101 Firefox/61.0',
     'Cookie': "WEIBOCN_FROM=1110006030; loginScene=102003; geetest_token=81cc99ad82885c35b9dd3524ff23f91e; SUB=_2A25Iu0wCDeRhGeFN6lEU9SfMzjWIHXVrucHKrDV6PUJbkdAGLWPakW1NQH8835WX39PyYDkfxW20UdZNSR_z7VeB; _T_WM=91902402832; XSRF-TOKEN=0b4a6a; MLOGIN=1; M_WEIBOCN_PARAMS=lfid%3D102803%26luicode%3D20000174%26uicode%3D10000011%26fid%3D231093_-_selffollowed"
 }
-
+def get_data(gen):
+    for i in gen:
+        if isinstance(i,types.GeneratorType):
+            get_data(i)
+        else :
+            print(i)
+        
 import types
 if  __name__ == "__main__" :             
-    for i in start_requests():
-        for i2 in i:
-            time.sleep(1)
-            if isinstance(i2,types.GeneratorType):
-                print("test")
-                continue
-            print(i2)
+   gen = start_requests()
+   get_data(gen)
+   
+              

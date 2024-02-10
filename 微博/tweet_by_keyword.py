@@ -167,8 +167,15 @@ end_time = datetime.datetime(year=2022, month=10, day=1, hour=1)
 # 是否按照小时进行切分，数据量更大; 对于非热门关键词**不需要**按照小时切分
 is_split_by_hour = True
 
+def get_data(gen):
+    for i in gen:
+        if isinstance(i,types.GeneratorType):
+            get_data(i)
+        else :
+            print(i)
+        
+import types
 if  __name__ == "__main__" :             
-    for i in start_requests():
-        for i2 in i:
-            for i3 in i2 :
-                print(i3)
+   gen = start_requests()
+   get_data(gen)
+   
