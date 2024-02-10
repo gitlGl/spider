@@ -38,7 +38,7 @@ def start_requests():
     爬虫入口
     """
     # 这里tweet_ids可替换成实际待采集的数据
-    tweet_ids = ["4999221734541821"]
+    tweet_ids = ["NFVZnnPVi"]
     for tweet_id in tweet_ids:
         mid =tweet_id
         url = f"https://weibo.com/ajax/statuses/buildComments?" \
@@ -57,7 +57,7 @@ def parse(response,source_url):
         if 'more_info' in comment_info:
             url = f"https://weibo.com/ajax/statuses/buildComments?is_reload=1&id={comment_info['id']}" \
                 f"&is_show_bulletin=2&is_mix=1&fetch_level=1&max_id=0&count=100"
-            yield request_callback(url, callback=parse,source_url = url)
+            yield request_callback(url, callback=parse,source_url = source_url)
     if data.get('max_id', 0) != 0 and 'fetch_level=1' not in response.url:
         url = source_url + '&max_id=' + str(data['max_id'])
         yield request_callback(url, callback=parse, source_url =  source_url)
@@ -91,7 +91,6 @@ def request_callback(url, callback,source_url=None):
             time.sleep(1)
             return callback(res,source_url)
         except Exception as e:
-            print(e,"llll")
             time.sleep(2)
 
 REQUEST_HEADERS = {

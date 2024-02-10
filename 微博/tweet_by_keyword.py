@@ -74,29 +74,8 @@ def parse_tweet_info(data):
         tweet['retweet_id'] = data['retweeted_status']['mid']
     return tweet
 
-def parse_long_tweet(response):
-    """
-    解析长推文
-    """
-    data = json.loads(response.text)['data']
-    item = response.meta['item']
-    item['content'] = data['longTextContent']
-    yield item
 
 
-    
-def parse_tweet(response):
-    """
-    解析推文
-    """
-    data = json.loads(response.text)
-    item = parse_tweet_info(data)
-    item['keyword'] = response.meta['keyword']
-    if item['isLongText']:
-        url = "https://weibo.com/ajax/statuses/longtext?id=" + item['mblogid']
-        yield request_callback(url, callback=parse_long_tweet)
-    else:
-        yield item
         
 def parse(response):
     """
@@ -123,8 +102,13 @@ def parse_tweet(response):
     item = parse_tweet_info(data)
     item['keyword'] = KEYWORD
     if item['isLongText']:
+        print("isLongText")
         url = "https://weibo.com/ajax/statuses/longtext?id=" + item['mblogid']
-        yield request_callback(url, callback=parse_long_tweet)
+        res = request_callback(url)
+        data = json.loads(res.text)['data']
+        item['content'] = data['longTextContent']
+        yield item
+        
     else:
         yield item
 
@@ -148,8 +132,10 @@ def start_requests():
                 url = f"https://s.weibo.com/weibo?q={keyword}&timescope=custom%3A{_start_time}%3A{_end_time}&page=1"
                 yield request_callback(url, callback=parse)
                 time_cur = time_cur + datetime.timedelta(hours=1)
-def request_callback(url, callback):
+def request_callback(url, callback=None):
     res = requests.get(headers=REQUEST_HEADERS,url=url)
+    if not callable:
+        return res
     time.sleep(1)
     return callback(res)                
 
