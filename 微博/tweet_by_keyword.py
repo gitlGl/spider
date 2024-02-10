@@ -83,10 +83,7 @@ def parse_long_tweet(response):
     item['content'] = data['longTextContent']
     yield item
 
-def request_callback(url, callback):
-    res = requests.get(headers=REQUEST_HEADERS,url=url)
-    time.sleep(1)
-    return callback(res)
+
     
 def parse_tweet(response):
     """
@@ -151,7 +148,10 @@ def start_requests():
                 url = f"https://s.weibo.com/weibo?q={keyword}&timescope=custom%3A{_start_time}%3A{_end_time}&page=1"
                 yield request_callback(url, callback=parse)
                 time_cur = time_cur + datetime.timedelta(hours=1)
-                
+def request_callback(url, callback):
+    res = requests.get(headers=REQUEST_HEADERS,url=url)
+    time.sleep(1)
+    return callback(res)                
 
 REQUEST_HEADERS = {
     'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.13; rv:61.0) Gecko/20100101 Firefox/61.0',
