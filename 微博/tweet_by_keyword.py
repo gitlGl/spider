@@ -146,7 +146,7 @@ REQUEST_HEADERS = {
 KEYWORD = ''
 
 # 这里keywords可替换成实际待采集的数据
-keywords = ['丽江',"测试"]
+keywords = ['丽江',"YIGE"]
 # 这里的时间可替换成实际需要的时间段
 start_time = datetime.datetime(year=2022, month=10, day=1, hour=0)
 end_time = datetime.datetime(year=2022, month=10, day=1, hour=1)
