@@ -24,7 +24,6 @@ def get_po_num(local_file,sheet_name):
             data.append(value)
     return data
 
-
 def check_num(page,num):
 
     div_rt_tbody = page.query_selector('div.rt-tbody')  
@@ -64,8 +63,7 @@ def get_text(page):
         if len(data) == 2:
             data_list.append(data)
    
-    else:
-        return data_list
+    return data_list
 
 def to_page(page):
     while True:
@@ -75,7 +73,25 @@ def to_page(page):
             break
         except Exception as e :
             print("异常网络，重试",e.__traceback__.tb_lineno,e)
-            time.sleep(2)           
+            time.sleep(2)    
+            
+            
+def record_sheet_name(sheet_name):
+    with open("sheet_name.txt", "a+",encoding="utf8") as f:
+        f.seek(0)
+        data = f.read().splitlines()
+        
+        if not sheet_name in data:
+            f.seek(0,2)
+            f.write(f"{sheet_name}\n") # 将内容追加到到文件尾部
+            print(f"进度{sheet_name}")   
+            
+def continue_po(list_number,process_num):
+    for po_number in list_number[:]:
+            if po_number in process_num:
+                list_number.remove(po_number)
+                print(f"查询：{po_number}，跳过")
+        
 
 def run(playwright: Playwright,sheets) -> None:
     browser = playwright.firefox.launch(headless=False)
@@ -85,24 +101,17 @@ def run(playwright: Playwright,sheets) -> None:
     page = context.new_page()
      
     for sheet_name in sheet_names:
-      
         list_number = get_po_num(local_file,sheet_name)
         process_file = f"{sheet_name}.txt"
         process_num = readTxt(process_file)
-
         row_data_file = f"{sheet_name}-row_data.csv"
+        continue_po(list_number,process_num)
                
-        for po_number in list_number[:]:
-            if po_number in process_num:
-                list_number.remove(po_number)
-                print(f"查询：{po_number}，跳过")
-    
-
-        to_page(page)
+        to_page(page) 
         process = []
         count = 1
-        retry = 0
         for index,po_number in enumerate(list_number):
+            retry = 0
             while True:
                 try:
                     print(f"正在查询{po_number}")
@@ -126,6 +135,7 @@ def run(playwright: Playwright,sheets) -> None:
                     
                 except Exception as e:
                     print("异常网络，重试",e.__traceback__.tb_lineno,e,e.__traceback__.tb_frame)
+                    
             if count == 11:
                 time.sleep(5)
                 data_list = get_text(page)
@@ -156,21 +166,11 @@ def run(playwright: Playwright,sheets) -> None:
 
                 to_page(page)
                 count = 1
-
-        with open("sheet_name.txt", "a+",encoding="utf8") as f:
-            f.seek(0)
-            data = f.read().splitlines()
-             
-            if not sheet_name in data:
-                f.seek(0,2)
-                f.write(f"{sheet_name}\n") # 将内容追加到到文件尾部
-                print(f"进度{sheet_name}")
-
-                     
+                
+    record_sheet_name(sheet_name)          
     context.close()
     browser.close()
             
-
 if "__main__" == __name__:
     local_file = "2.9 CK payment.xlsx"
     workbook = load_workbook(local_file)
