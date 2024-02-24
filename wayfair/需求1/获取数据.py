@@ -1,9 +1,9 @@
-
 from playwright.sync_api import Playwright, sync_playwright
 from openpyxl import load_workbook
 import time,os,random,csv
 from decimal import Decimal
 from copy import deepcopy
+from collections import deque
 
 current_file_path = os.path.abspath(__file__)
 os.chdir(os.path.dirname(current_file_path))  
@@ -110,40 +110,61 @@ def get_set_data(fiel_path):
                 set_.add(tem_number)
             return set_
         
-def get_text(page,po_number,set_data,row_data_file,error_data):
-    count = 0
-    while True:
-        div_rt_tbody = page.query_selector('div.rt-tbody')  
-        div_rt_tr_groups = div_rt_tbody.query_selector_all('div.rt-tr-group')
-        tt = []  
-        data_list = []
-       
+def check(page,po_number,queue,sleep_num):  
+    data_list = []
+    div_rt_tbody = page.query_selector('div.rt-tbody')  
+    div_rt_tr_groups = div_rt_tbody.query_selector_all('div.rt-tr-group')
         
-        for div_rt_td in div_rt_tr_groups:
-            div_datas = div_rt_td.query_selector_all('div.rt-td')
-            data_ = []
+    for div_rt_td in div_rt_tr_groups:
+        div_datas = div_rt_td.query_selector_all('div.rt-td')
+        
+        data_ = []
+        string = []
+        for index,item in enumerate( div_datas):
+            text = item.text_content()
+            if text == "\xa0" or  text =="":
+                return False
+            if index == 2:
+                tem_number = get_number(text)
+                if po_number[2:] != tem_number:
+                    return False
+                
+            if index == 1 or index == 4:
+                string.append(text)
+           
+            data_.append(text)
+
+        if sleep_num < 3:    
+            if len(string) == 2:
+                if ''.join(string) in queue:
+                    return "sleep"
+                
+        if len(string) == 2:       
+            queue.add(''.join(string))
             
-            for index,item in enumerate( div_datas):
-                text = item.text_content()
-                if text != "\xa0" and  text!="":
-                    if index == 2:
-                        tem_number = get_number(text)
-                        if po_number[2:] != tem_number:
-                            tt.append(False)
-                        else:
-                            tt.append(True)
-                            
-                    data_.append(text)
-                    tt.append(True)
-              
-                else:
-                    tt.append(False)
-                    
-            data_list.append(data_)
-                    
-        if all(tt) and len(tt)!= 0:
+        data_list.append(data_)
+        
+    return data_list     
+
+def get_text(page,po_number,set_data,row_data_file,error_data,queue):
+    count = 0
+    sleep_num = 0
+    while True:
+       
+        data_list = check(page,po_number,queue,sleep_num)
+        
+        if data_list == "sleep":
+            sleep_num = sleep_num + 1 
+            if sleep_num < 3:
+                time.sleep(1)
+                continue
+            
+            else:
+                sleep_num = 0
+                
+        if  data_list:           
             for i in data_list: 
-                i.append(tem_number)
+                i.append(po_number[2:])
                 string = "".join(i)
                 if string not in set_data:
                     set_data.add(string)
@@ -158,6 +179,7 @@ def get_text(page,po_number,set_data,row_data_file,error_data):
             return True                   
                         
         else:
+            time.sleep(1)
             count = count +1
             print(f" 尝试获取数据失败次数{po_number}：{count}")
             if count > 100:
@@ -193,7 +215,8 @@ def run(playwright: Playwright,sheet_names) -> None:
             except Exception as e :
                 print("异常网络，重试",e.__traceback__.tb_lineno,e)
                 random_sleep(0.8,1)
-    
+                
+        queue = deque(maxlen=3)
         for po_number in list_number:
             count = 0
             while True:
@@ -204,7 +227,7 @@ def run(playwright: Playwright,sheet_names) -> None:
                     page.wait_for_load_state("networkidle")
                     random_sleep(2.5,3)
                     
-                    flag = get_text(page,po_number,set_data,row_data_file,error_data)
+                    flag = get_text(page,po_number,set_data,row_data_file,error_data,queue)
                     
                     if flag:
                         with open(process_file, "a") as f:
