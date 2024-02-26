@@ -135,7 +135,7 @@ def check(page,po_number,queue1,sleep_num,queue2,sleep_num2):
                     if sleep_num2 < 3:
                         return "sleep2"
                     
-                queue2.add(text)
+                queue2.append(text)
             data_.append(text)
 
         if sleep_num < 3:    
@@ -143,7 +143,7 @@ def check(page,po_number,queue1,sleep_num,queue2,sleep_num2):
                 if ''.join(string) in queue1:
                     return "sleep"
                 
-                queue1.add(''.join(string))
+                queue1.append(''.join(string))
             
         data_list.append(data_)
         
@@ -191,11 +191,11 @@ def get_text(page,po_number,set_data,row_data_file,error_data,queue1,queue2):
                             csv.writer(csv_f2).writerow(i)
             return True                   
                         
-        else:
+        if data_list is False:
             time.sleep(1)
             count = count +1
             print(f" 尝试获取数据失败次数{po_number}：{count}")
-            if count > 100:
+            if count > 30:
                 return False
 
 def run(playwright: Playwright,sheet_names) -> None:
