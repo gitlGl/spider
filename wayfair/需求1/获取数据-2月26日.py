@@ -113,6 +113,7 @@ def get_set_data(fiel_path):
 class Check():
     queue1 = deque(maxlen=3)
     queue2 = deque(maxlen=10)
+    MAX = 3
     def __init__(self,page,po_number) -> None:
         self.page = page
         self.po_number = po_number
@@ -147,7 +148,7 @@ class Check():
                 if index == 1 or index == 4:
                     string.append(text)
                     if text in self.queue2:
-                        if self.sleep_num2 < 3:
+                        if self.sleep_num2 < self.MAX:
                             time.sleep(0.2)
                             self.sleep_num2 = self.sleep_num2 + 1
                             return False
@@ -155,7 +156,7 @@ class Check():
                     self.queue2.append(text)
                 data_.append(text)
 
-            if self.sleep_num < 3:    
+            if self.sleep_num < self.MAX:    
                 if len(string) == 2:
                     if ''.join(string) in self.queue1:
                         time.sleep(1)
