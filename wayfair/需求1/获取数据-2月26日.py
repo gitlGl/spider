@@ -109,60 +109,74 @@ def get_set_data(fiel_path):
                 tem_number = get_number(''.join(row))
                 set_.add(tem_number)
             return set_
+
+class Check():
+    queue1 = deque(maxlen=3)
+    queue2 = deque(maxlen=10)
+    def __init__(self,page,po_number) -> None:
+        self.page = page
+        self.po_number = po_number
         
-def check(page,po_number,queue,sleep_num):  
-    data_list = []
-    div_rt_tbody = page.query_selector('div.rt-tbody')  
-    div_rt_tr_groups = div_rt_tbody.query_selector_all('div.rt-tr-group')
+        self.count = 0
+        self.sleep_num = 0
+        self.sleep_num2 = 0
         
-    for div_rt_td in div_rt_tr_groups:
-        div_datas = div_rt_td.query_selector_all('div.rt-td')
         
-        data_ = []
-        string = []
-        for index,item in enumerate( div_datas):
-            text = item.text_content()
-            if text == "\xa0" or  text =="":
-                return False
-            if index == 2:
-                tem_number = get_number(text)
-                if po_number[2:] != tem_number:
+    def check(self):
+        data_list = []
+        div_rt_tbody = self.page.query_selector('div.rt-tbody')  
+        div_rt_tr_groups = div_rt_tbody.query_selector_all('div.rt-tr-group')
+            
+        for div_rt_td in div_rt_tr_groups:
+            div_datas = div_rt_td.query_selector_all('div.rt-td')
+            
+            data_ = []
+            string = []
+            for index,item in enumerate( div_datas):
+                text = item.text_content()
+                if text == "\xa0" or  text =="":
                     return False
                 
-            if index == 1 or index == 4:
-                string.append(text)
-           
-            data_.append(text)
+                if index == 2:
+                    tem_number = get_number(text)
+                    if self.po_number[2:] != tem_number:
+                        time.sleep(1)
+                        self.count = self.count + 1 
+                        return False
+                    
+                if index == 1 or index == 4:
+                    string.append(text)
+                    if text in self.queue2:
+                        if self.sleep_num2 < 3:
+                            time.sleep(0.2)
+                            self.sleep_num2 = self.sleep_num2 + 1
+                            return False
+                        
+                    self.queue2.append(text)
+                data_.append(text)
 
-        if sleep_num < 3:    
-            if len(string) == 2:
-                if ''.join(string) in queue:
-                    return "sleep"
+            if self.sleep_num < 3:    
+                if len(string) == 2:
+                    if ''.join(string) in self.queue1:
+                        time.sleep(1)
+                        self.sleep_num = self.sleep_num + 1
+                        return False
+                    
+                    self.queue1.append(''.join(string))
                 
-        if len(string) == 2:       
-            queue.add(''.join(string))
+            data_list.append(data_)
             
-        data_list.append(data_)
+        return data_list     
         
-    return data_list     
-
-def get_text(page,po_number,set_data,row_data_file,error_data,queue):
-    count = 0
-    sleep_num = 0
+def get_text(page,po_number,set_data,row_data_file,error_data):
+    check = Check(page,po_number)
     while True:
-       
-        data_list = check(page,po_number,queue,sleep_num)
-        
-        if data_list == "sleep":
-            sleep_num = sleep_num + 1 
-            if sleep_num < 3:
-                time.sleep(1)
-                continue
-            
-            else:
-                sleep_num = 0
+        data_list = check.check()
                 
-        if  data_list:           
+        if  type(data_list) is list and len(data_list) != 0:
+            check.sleep_num = 0
+            check.sleep_num2 = 0
+                       
             for i in data_list: 
                 i.append(po_number[2:])
                 string = "".join(i)
@@ -178,12 +192,15 @@ def get_text(page,po_number,set_data,row_data_file,error_data,queue):
                             csv.writer(csv_f2).writerow(i)
             return True                   
                         
-        else:
-            time.sleep(1)
-            count = count +1
-            print(f" 尝试获取数据失败次数{po_number}：{count}")
-            if count > 100:
+        if data_list is False:
+            if check.count > 30:
+                check.sleep_num = 0
+                check.sleep_num2 = 0
+                check.count = 0
                 return False
+            
+            print(f" 尝试获取数据失败次数{po_number}：{check.count}")
+            
 
 def run(playwright: Playwright,sheet_names) -> None:
     browser = playwright.firefox.launch(headless=True)
@@ -216,7 +233,6 @@ def run(playwright: Playwright,sheet_names) -> None:
                 print("异常网络，重试",e.__traceback__.tb_lineno,e)
                 random_sleep(0.8,1)
                 
-        queue = deque(maxlen=3)
         for po_number in list_number:
             count = 0
             while True:
@@ -227,7 +243,7 @@ def run(playwright: Playwright,sheet_names) -> None:
                     page.wait_for_load_state("networkidle")
                     random_sleep(2.5,3)
                     
-                    flag = get_text(page,po_number,set_data,row_data_file,error_data,queue)
+                    flag = get_text(page,po_number,set_data,row_data_file,error_data)
                     
                     if flag:
                         with open(process_file, "a") as f:
