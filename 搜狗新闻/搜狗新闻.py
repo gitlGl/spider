@@ -87,7 +87,7 @@ def save_data(filename,data):
     f.close() 
       
 def handle_redirect(route, request):
-    if request.resource_type in ["image", "media", "websocket"]:
+    if request.resource_type in ["image", "media", "websocket"]:#,"stylesheet"
         route.abort("")
         return
     
@@ -99,25 +99,48 @@ def handle_redirect(route, request):
         #print(request.url)
         route.continue_()   
         
-head = ["href","title","date","source","article",'分类',"关键词"] 
+def get_artiles(page,hrefs):
+    artiles = []
+    for index,x in enumerate(hrefs):
+        try:
+            page.goto(x,timeout=100000)
+            page.wait_for_load_state("networkidle")
+            time.sleep(1)
+            hrefs[index] = page.url
+            print(page.url)
+            
+        except Exception as e:
+            print(e,e.__traceback__.tb_lineno,e.__traceback__.tb_frame)
+            # 获取所有 <p> 标签中的文字
+            
+        all_p_tags = page.query_selector_all('p')
+        p_texts = [tag.text_content() for tag in all_p_tags]
 
-  
+        # 合并所有文字内容为一个字符串
+        merged_text = ''.join(p_texts)# 去除所有空格
+        artile = merged_text.replace(' ', '')
+        pattern = r"\|[^\|]+\||\d{3}-\d{8}|\d{3}\d{8}|\[\d+\]|\w+@[a-zA-Z0-9]+\.[a-zA-Z]+|www\.[a-zA-Z0-9]+\.[a-zA-Z]+"
+        artile = re.sub(pattern, "", artile)
+        artiles.append(artile)
+        
+    return artiles
+    
 def run(playwright: Playwright) -> None:
     browser = playwright.firefox.launch(headless=False)
-   
     context = browser.new_context()
+    
     # 打开页面继续操作
     page = context.new_page()
     page.route("**/*", handle_redirect)
     
     f = open("关键词.csv",encoding="utf8") 
-
-    dics = csv.DictReader(f)             
+    dics = csv.DictReader(f)   
+              
     for dic in dics:
         for key,value in dic.items():
             if value == '':
                 continue
-            url = 'https://www.sogou.com/sogou?interation=1728053249&interV=&query=' + value + "page=1"
+            url = 'https://www.sogou.com/sogou?interation=1728053249&interV=&query=' + value + "&page=1"
             result = get_hrefs(url)
             if result:
                 sources,dates,titles,hrefs,next_page_link =  result
@@ -128,45 +151,33 @@ def run(playwright: Playwright) -> None:
             count = 2 
             while next_page_link:
                 print(f"{key}:{value}第{count -1}页")
-                print("获取到的链接:",hrefs)  
-                artiles = []
-                for index,x in enumerate(hrefs):
-                    try:
-                        page.goto(x,timeout=100000)
-                        page.wait_for_load_state("networkidle")
-                        time.sleep(1.5)
-                        hrefs[index] = page.url
-                        print(page.url)
-                        
-                    except Exception as e:
-                        print(e,e.__traceback__.tb_lineno,e.__traceback__.tb_frame)
-                        # 获取所有 <p> 标签中的文字
-                        
-                    all_p_tags = page.query_selector_all('p')
-                    p_texts = [tag.text_content() for tag in all_p_tags]
-
-                    # 合并所有文字内容为一个字符串
-                    merged_text = ''.join(p_texts)# 去除所有空格
-                    artile = merged_text.replace(' ', '')
-                    pattern = r"\|[^\|]+\||\d{3}-\d{8}|\d{3}\d{8}|\[\d+\]|\w+@[a-zA-Z0-9]+\.[a-zA-Z]+|www\.[a-zA-Z0-9]+\.[a-zA-Z]+"
-                    artile = re.sub(pattern, "", artile)
-                    artiles.append(artile)
+                
+                #避免其他异常出现
+                if len(hrefs) != 0:
+                    count = count  + 1
+                    print("获取到的链接:",hrefs)
                     
+                else:
+                    time.sleep(5)
+                    print(f"重新获取获取{key}:{value}第{count -1}页的链接:")
+                    continue
+                
+                    
+                artiles = get_artiles(page,hrefs)
+                
                 iter_zip = zip(hrefs,titles,dates,sources,artiles)
                 for data in iter_zip:
                     data_ = [*data]
                     data_.extend([key,value])
                     save_data(key + '.csv',data_)
                         
-                next_url = f'https://www.sogou.com/sogou?interation=1728053249&interV=&query=' + value + "page={count}"
+                next_url = f'https://www.sogou.com/sogou?interation=1728053249&interV=&query=' + value + "&page={count}"
                 result = get_hrefs(next_url)
                 if result:
                     sources,dates,titles,hrefs,next_page_link =  result
                     
                 else:
                     next_page_link = False
-                    
-                count = count  + 1
                 
             count = 2 
                    
@@ -175,7 +186,7 @@ def run(playwright: Playwright) -> None:
     context.close()
     browser.close()
     
-    
+head = ["href","title","date","source","article",'分类',"关键词"]   
 with sync_playwright() as playwright:
     run(playwright)
     
