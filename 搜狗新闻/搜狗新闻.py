@@ -1,5 +1,5 @@
 
-from playwright.sync_api import Playwright, sync_playwright
+from playwright.sync_api import Playwright,sync_playwright
 import requests,re,time,csv,os
 from bs4 import BeautifulSoup
 from datetime import datetime

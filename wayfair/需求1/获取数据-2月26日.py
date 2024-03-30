@@ -22,11 +22,13 @@ def readTxt(process_file):# 读取已下载的公司代码
         return set(data) 
      
 def get_po_num(local_file,sheet_name):
-    # 加载 Excel 文件
     workbook = load_workbook(local_file)
-    # 选择第一个工作表
-    sheet = sheet = workbook[sheet_name]
-    return [str(cell.value) for cell in sheet['A'] if cell.value ]
+    sheet = workbook[sheet_name]
+    #values_only=True 是指在访问或处理数据时只返回数值，而不返回索引或其他元数据
+    for row in sheet.iter_rows(values_only=True):
+        yield row[1]
+
+
 
 def get_number(tem_number):  
     number = ''

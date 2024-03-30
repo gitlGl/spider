@@ -103,7 +103,7 @@ def main():
     pool.join()
     
 
-base_dir = "2022测试"
+base_dir = "年报"
 keyword_dir =  "关键词.xlsx"
 cipin_dir =  "词频统计.csv"
 

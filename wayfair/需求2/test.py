@@ -2,6 +2,10 @@ from playwright.sync_api import Playwright, sync_playwright
 from openpyxl import load_workbook
 import time,os,csv
 
+
+current_file_path = os.path.abspath(__file__)
+os.chdir(os.path.dirname(current_file_path))  
+
 def readTxt(process_file):# 读取已下载的公司代码
     if not os.path.exists(process_file):
         with open(process_file, "w") as f:

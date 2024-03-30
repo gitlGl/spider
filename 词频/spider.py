@@ -245,6 +245,7 @@ def check(number):#检查xls文件格式，调整文件内容
         return tem
     else:
         print("格式错误：",number)
+        
 def getNumber():#获取xls文件内的公司代码
     # 加载 Excel 文件
     workbook = load_workbook(file_name_xls)
@@ -338,7 +339,7 @@ pool_block 这个参数为True时候，当池中所有链接都在使用中，�
 headers =  {"User-Agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 Safari/537.36"}
 
 lock = threading.Lock()
-base_dir = "出口上市公司年报/"# 下载的年报存放的文件夹
+base_dir = "年报/"# 下载的年报存放的文件夹
 dir_error = "存在问题年报/"#需要手动核实问题的年报存放的文件夹
 file_name = "已下载公司代码.txt"#记录年报的下载进度
 file_name_xls = "股票代码.xlsx"#需要下载的公司代码所在的xls文件,出口上市公司.xls

@@ -36,15 +36,18 @@ def get_num(keyword):
 
     result = re.search(pattern, text)
     matched_text = result.group(1)
-    print(matched_text)
+    #print(matched_text)
   
     return int(matched_text )
 
-def get_article(hrefs):
+def get_articles(hrefs):
     articles = []
     for href in hrefs:
+        article =  ''
+        #print(href)
+        
         try:
-            article = requests.get(href, headers=headers, timeout=10).content
+            article = requests.get(href, headers=headers, timeout=3000).content
             encoding = chardet.detect(article)['encoding']
             article = article.decode(encoding)
         
@@ -54,23 +57,27 @@ def get_article(hrefs):
         if article == '':
             print("爬取失败")
             continue
-                  
+        
+        if "百度安全验证" in article:
+            print("百度安全验证")
+            articles.append("百度安全验证")
+            continue
+            #time.sleep(60)
+          
         p_article = '<p>(.*?)</p>'
         article_main = re.findall(p_article, article)  # 获取<p>标签里的正文信息
         
         article = ''.join(article_main)  # 将列表转换成为字符串
-        clean_text = re.sub(r'<.*?>', '', article)
-        clean_text = re.sub(r'&nbsp;| +', ' ', clean_text)
-        clean_text = re.sub(r'&\w+;', '', clean_text)
-        clean_text = clean_text.strip()
-        #print(clean_text)
-        articles.append(clean_text)
-        time.sleep(1) 
+        article = article.strip()
+      
+        articles.append(article)
+        time.sleep(1)
+        #print(article)
         
     return articles
     
 def save_data(filename,data):
- 
+     
     if not os.path.exists(filename):
         f = open(filename, 'wt',encoding="utf8",newline = '')
         f_csv = csv.writer(f)
@@ -86,17 +93,25 @@ def save_data(filename,data):
     f.close()   
 
 def baidu(key,word):
+    
     num = get_num(word)
     url = 'http://www.baidu.com/s?tn=news&rtt=4&bsst=1&cl=2&wd=' + word # 其中设置rtt=4则为按时间排序，如果rtt=1则为按焦点排序
     
   
     for x in range(0,num,10):
         url = url + f"&pn={x}"
-        res = requests.get(url, headers=headers, timeout=10).text
-        # 定义正则表达式模式
-    
+        try:
+            res = requests.get(url, headers=headers, timeout=3000).text
+            
+        except:
+            
+            print("error")
+            time.sleep(360)
+            continue
+            
         p_href = '<h3 class="news-title_1YtI1 "><a href="(.*?)"'
         hrefs = re.findall(p_href, res, re.S)
+        hrefs = [url.replace("&amp;wfr=spider&amp;for=pc", "") for url in hrefs ]
         
         p_title = '<h3 class="news-title_1YtI1 ">.*?>(.*?)</a>'
         titles = re.findall(p_title, res, re.S)
@@ -106,22 +121,17 @@ def baidu(key,word):
         dates = re.findall(p_date, res)
         dates = convert_time(dates)
         
-        
         p_source = '<span class="c-color-gray" .*?>(.*?)</span>'
         
         sources = re.findall(p_source, res)
         
-       
-
-    
         for i in range(len(titles)):
             titles[i] = titles[i].strip()  
             titles[i] = re.sub('<.*?>', '', titles[i])  
         
-        articles = get_article(hrefs)
-        
-       
+        articles = get_articles(hrefs)
         iter_zip = zip(hrefs,titles,dates,sources,articles)
+        
         for data in iter_zip:
             data_ = [*data]
             data_.extend([key,value])

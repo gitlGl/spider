@@ -16,7 +16,7 @@ def pdf2txt(root,file):#转换函数,多进程调用函数
         os.remove(root+file)#转换成功后删除pdf文件
 
 def main():#使用多进程，提高转换速度
-    base_dir = "出口上市公司年报"
+    base_dir = "年报"
     file_dir_lst = []
     
     for root, dirs, files in os.walk(base_dir):
