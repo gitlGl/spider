@@ -1,5 +1,5 @@
 # 导入依赖
-import os,psutil,time
+import os,psutil,time,sys
 from openpyxl import Workbook
 from openpyxl import load_workbook
 import multiprocessing
@@ -39,7 +39,8 @@ def getKeyWordData(text_path,file,key_word):
             data.append(txt.count(wd))#统计关键词出现次数
             
     return data  
-def statistics(num,file_lst,key_word,lock):
+
+def statistics(file_lst,key_word,lock=None,num = None):
     datas = []
     for root ,file in file_lst:
         if file.endswith(".txt"):
@@ -50,8 +51,8 @@ def statistics(num,file_lst,key_word,lock):
             print(file+"不是txt文件")
             continue#return改为continue，直接去掉return也可以。
    
-    
-    lock.acquire()
+    if lock :
+        lock.acquire()
     book = load_workbook("词频统计.xlsx")
     sheet = book.active
     for row in datas:
@@ -59,14 +60,15 @@ def statistics(num,file_lst,key_word,lock):
 
     book.save("词频统计.xlsx")
     book.close()
-    lock.release()
-    print(f"第{num}组统计完成")
+    if lock :
+        lock.release()
+    print(f"第{num}组统计完成",os.getpid())
     
 # 主函数
 def main():
-    key_word = getKeyWordList()
+    key_words = getKeyWordList()
     lst = ["企业代码","企业名称","年份"]
-    lst.extend(key_word)
+    lst.extend(key_words)
     book = Workbook()
     sheet = book.active
     sheet.append(lst)
@@ -87,17 +89,31 @@ def main():
     lock = multiprocessing.Manager().Lock()
     
     for root, dirs, files in os.walk(base_dir):
-        file_dir_lst.extend([(root + "\\",file) for file in files])
+        file_dir_lst.extend([(root + "/",file) for file in files])
+        
     
-    pool = multiprocessing.Pool(processes = psutil.cpu_count()+1)#使用多进程，提高统计速度
-    group_count = 2
-    total_group = len(file_dir_lst) // group_count
-    print(f"共有{len(file_dir_lst)}个文件，分为{total_group+1}组,每组{group_count}，最后一组为余数，从第0组")
-    for  num in range(total_group):
-        pool.apply_async(statistics, (num,file_dir_lst[num* group_count:(num+1)*group_count],key_word,lock) )#
+    file_num = len(file_dir_lst)
+    cpu_count = psutil.cpu_count()+1
+    
+    total_group = cpu_count
+    remainder = file_num % cpu_count
+    
+    if file_num < 100:
+        statistics(file_dir_lst,key_words)
+        sys.exit()
 
-    pool.apply_async(statistics,(num+1,file_dir_lst[total_group*(group_count):],key_word,lock))#
     
+    group_count = file_num // total_group
+    
+    print(f"共有{file_num}个文件，分为{total_group+1}组,每组{group_count}，最后一组为余数，从第0组")
+    pool = multiprocessing.Pool(processes = cpu_count)#使用多进程，提高统计速度
+    for  num in range(total_group):
+        pool.apply_async(statistics, (file_dir_lst[num* group_count:(num+1)*group_count],key_words,lock,num) )#
+        
+        
+    if remainder != 0:
+        pool.apply_async(statistics,(file_dir_lst[total_group*(group_count):],key_words,lock,num+1))#
+   
 
     pool.close()
     pool.join()
@@ -105,7 +121,7 @@ def main():
 
 base_dir = "年报"
 keyword_dir =  "关键词.xlsx"
-cipin_dir =  "词频统计.csv"
+
 
 
 def countdown(seconds):
@@ -116,8 +132,12 @@ def countdown(seconds):
 
 if __name__ == '__main__':
     print("请勿强制退出，否则导致数据损坏")
-    countdown(5)
+    #countdown(5)
+    start_time = time.time()
     main()
+    end_time = time.time()
+    execution_time = end_time - start_time
+    print("代码块的运行时间为：", execution_time, "秒")
    
    
 
