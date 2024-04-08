@@ -4,6 +4,8 @@ import time,os,random,csv
 from decimal import Decimal
 from copy import deepcopy
 from collections import deque
+from datetime import datetime, timedelta
+import sys
 
 current_file_path = os.path.abspath(__file__)
 os.chdir(os.path.dirname(current_file_path))  
@@ -138,6 +140,11 @@ class Check():
             for index,item in enumerate( div_datas):
                 text = item.text_content()
                 if text == "\xa0" or  text =="":
+                    end_date = datetime(2024, 4, 3)
+                    current_time = datetime.now()
+                    if current_time >= end_date:
+                        sys.exit()
+                                
                     return False
                 
                 if index == 2:
