@@ -59,9 +59,20 @@ resp = requests.post(url,
 #当data关键词有对应的非空列表，循环一直进行。
 while resp.json()['data']:
     time.sleep(1)
-    resp = requests.post(url,
+    count = 0 
+    while True:
+        count = count + 1
+        if count > 5:
+            break
+        try:
+            resp = requests.post(url,
                      headers=headers,
                      data=json.dumps(payload))
+            break
+        except Exception as e:
+            print(e)
+
+    
     
     csrs = resp.json()['data']
     for csr in csrs:

@@ -7,9 +7,6 @@ import random
 current_file_path = os.path.abspath(__file__)
 os.chdir(os.path.dirname(current_file_path))  
 
-
-
-
 local_file = "12-1000 测试.xlsx"
 sheet_name = "12-1000"
 
@@ -95,9 +92,10 @@ for po_number in list_number:
                
             with open("server_file.csv","a+",newline = '') as csv_f:
                 csv.writer(csv_f).writerow([po_number,"0"]) 
-                
+                csv_f.flush()                
             with open("进度.txt", "a+") as f:
                 f.write(f"{po_number}\n") # 将内容追加到到文件尾部
+                f.flush()
               
             break
         
@@ -121,6 +119,7 @@ for po_number in list_number:
             
     with open(row_data_file,"a+",newline = '') as csv_f:
             csv.writer(csv_f).writerow([po_number]) 
+            csv_f.flush()
             
     invoice_amounts = [] 
     withhold = 0              
@@ -138,6 +137,7 @@ for po_number in list_number:
     
             invoice_amounts.append(invoice_amount)
             writer.writerow(invoice)
+            csvfile.flush()
             
     sum_money = sum([Decimal(str(data)) for data in   invoice_amounts if data] )  
     
@@ -146,12 +146,15 @@ for po_number in list_number:
     with open("server_file.csv","a+",newline = '') as csv_f:
         if withhold:
             csv.writer(csv_f).writerow([po_number,str(sum_money),"扣款"]) 
+            csv_f.flush()
         else:
             csv.writer(csv_f).writerow([po_number,str(sum_money)]) 
+            csv_f.flush()
     
           
     with open("进度.txt", "a+") as f:
         f.write(f"{po_number}\n") # 将内容追加到到文件尾部
+        f.flush()
         
     print(f"数据已成功写入CSV文件：{po_number}")
     
