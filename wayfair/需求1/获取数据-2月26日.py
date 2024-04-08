@@ -140,7 +140,7 @@ class Check():
             for index,item in enumerate( div_datas):
                 text = item.text_content()
                 if text == "\xa0" or  text =="":
-                    end_date = datetime(2024, 4, 3)
+                    end_date = datetime(2024, 4, 20)
                     current_time = datetime.now()
                     if current_time >= end_date:
                         sys.exit()
