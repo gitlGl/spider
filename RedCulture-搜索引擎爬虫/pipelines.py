@@ -1,9 +1,6 @@
 from pony.orm import *
 
-
 db = Database()  # 创建一个Pony ORM数据库实例
-
-
 class ArticleData(db.Entity):
     id = PrimaryKey(int, auto=True)
     url = Required(str,max_len=3000)
