@@ -23,7 +23,7 @@ def get_code_name_pairs(file_name):
         code_name_pairs[code] = name 
     return code_name_pairs
 
-code_name_pairs = get_code_name_pairs("code_name_pairs.xlsx")
+code_name_pairs = get_code_name_pairs("上交所代码.xlsx")
 
 
 def is_record(results):
@@ -57,10 +57,6 @@ def is_record(results):
                 
     return results
             
-     
-
-
-#str(int(year)+1)}-01-01~{str(int(year)+1)}-12-31
 def disclosure(code):
         """
         获得该公司的股票代码、报告类型、年份、定期报告披露日期、定期报告pdf下载链接，返回DataFrame。
