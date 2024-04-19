@@ -1,6 +1,3 @@
-# -*- coding: UTF-8 -*-
-# author xiaogu
-
 import json ,time,datetime
 import requests,json,os,time
 from openpyxl import load_workbook
@@ -37,23 +34,6 @@ def getNumber(file_name_xls):#获取xls文件内的公司代码
     return [cell.value for cell in sheet['A'] if check(cell.value) ]
 
 
-def date_ranges():
-    begin = datetime.datetime(1990, 11, 26)
-    now = datetime.datetime.today()
-    interv = datetime.timedelta(days=900)
-    dates = []
-    date = begin
-    while True:
-        if (date < now) & (date + interv < now):
-            date = date + interv
-            dates.append(date.strftime('%Y-%m-%d'))
-        else:
-            dates.append(now.strftime('%Y-%m-%d'))
-            break
-    return [(d1, d2) for d1, d2 in zip(dates, dates[1:])]
-
-
-
 #pdf_url = 'http://disc.static.szse.cn/download'+data.get('attachPath')
 
 
@@ -78,19 +58,24 @@ headers = {'Accept':'application/json, text/javascript, */*; q=0.01',
             'X-Requested-With':'XMLHttpRequest'}
 
 #payload，获取源代码
+list_years = ["2015","2016","2017","2018","2019","2020","2021","2022"] # 下载所需要的年份年报
 for code_number in code_numbers:
-    for date in date_ranges():
-        payload = {'seDate': date,
+    print(code_number)
+    for year in list_years:
+      
+        payload = {'seDate': (f"{str(int(year)+1)}-01-01",f"{str(int(year)+1)}-12-31"),
                 'stock': ["{firm_id}".format(firm_id=code_number)],
                 'channelCode': ["fixed_disc"],
                 'pageSize': 60,
                 'pageNum': '{page}'.format(page=1)}
+        
         response = requests.post(url, headers=headers, data=json.dumps(payload))
         doc = response.json()
         
         datas = doc.get('data')
+        print(datas)
         datas = json.dumps(datas)
-        time.sleep(1)
+        time.sleep(3)
         
         if datas != "[]":
             with open('parsed_data.txt', 'a+', encoding='utf-8') as f:

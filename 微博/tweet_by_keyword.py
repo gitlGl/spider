@@ -90,6 +90,7 @@ def parse(response):
     html = response.text
     if '<p>抱歉，未找到相关结果。</p>' in html:
         print("'<p>抱歉，未找到相关结果。</p>'")
+        time.sleep(10)
         return
     
     tweet_ids = re.findall(r'weibo\.com/\d+/(.+?)\?refer_flag=1001030103_" ', html)
@@ -148,7 +149,7 @@ def start_requests():
                     time_cur = time_cur + datetime.timedelta(hours=1)
                 
 def request_callback(url, callback=None):
-    time.sleep(1)
+    time.sleep(3)
     res = requests.get(headers=REQUEST_HEADERS,url=url)
     if  callback is None:
         return res
@@ -162,8 +163,8 @@ def get_data(gen):
         else :
             if i is None:
                 continue
-            if KEYWORD[1] in i['content']:
-                save_data(KEYWORD[0] + '.csv',i)
+           
+            save_data(KEYWORD[0] + '.csv',i)
 
       
 def save_data(filename,data):
@@ -191,7 +192,7 @@ def save_data(filename,data):
    
 REQUEST_HEADERS = {
     'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.13; rv:61.0) Gecko/20100101 Firefox/61.0',
-    'Cookie': "XSRF-TOKEN=VOE2tIUVU-VjtpJSV4uwgjfX; ALF=1712133341; SUB=_2A25I4feNDeRhGeFN6lEU9SfMzjWIHXVrn3VFrDV8PUJbkNAbLWXVkW1NQH883w7TACoe420UAO9mUbXQ6JZgzQQr; SUBP=0033WrSXqPxfM725Ws9jqgMF55529P9D9WhpIvPLn_vp7Xy-Y1zFbc8h5JpX5KzhUgL.FoM0eKefSK.7SK.2dJLoIp7LxKML1KBLBKnLxKqL1hnLBoMNe020SK-4eh-4; WBPSESS=y9jd-BcqKKMv9rbK7sP8E4WeiPJ9683G8IQH6GmwLJL7Gk6bfHtfN-LZ_t9fG3MUyk-GfHiiH_WSiBeNfqt32GLZ9a6sH4q_8C1vL3eqKgJHSTn8J5qnjmQ-p-nC4acWbb79eh9r2Tyhrs7PqTPfyw=="
+    'Cookie': "SINAGLOBAL=2217637827461.287.1709544909396; ULV=1709544909597:1:1:1:2217637827461.287.1709544909396:; PC_TOKEN=a7ee3c7f71; ALF=1715774596; SUB=_2A25LGWfUDeRhGeFN6lEU9SfMzjWIHXVoV-UcrDV8PUJbkNAbLXTEkW1NQH88334bVSIfUomqmBdjnIhZjYZRt_Ni; SUBP=0033WrSXqPxfM725Ws9jqgMF55529P9D9WhpIvPLn_vp7Xy-Y1zFbc8h5JpX5KMhUgL.FoM0eKefSK.7SK.2dJLoIp7LxKML1KBLBKnLxKqL1hnLBoMNe020SK-4eh-4; XSRF-TOKEN=WKTOVwyw0Vu5xrKJB9iCaO5x; WBPSESS=y9jd-BcqKKMv9rbK7sP8E4WeiPJ9683G8IQH6GmwLJL7Gk6bfHtfN-LZ_t9fG3MUyk-GfHiiH_WSiBeNfqt32OT-nnLMZ8YxlNYONsv-KiQq_6xRX3XBCcRLR7VeAbKa_UmclzSTqdyzo-CTkIGMSw=="
 }
 KEYWORD = ''
 

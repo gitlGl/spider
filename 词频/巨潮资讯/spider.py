@@ -17,8 +17,12 @@ def chekData(number):# 检查已下载公司年报数量是否足够
                 print("年报数量不足请检查："+root)
 
 def download(url_item):# 下载年报
-
-    for url in url_item:
+    for url in url_item[:]:
+        if '更新' in url['year']:
+            tem_item = [x for x in url_item if x['year'] == url['year'] and "更新" not in x['year']]
+            if len(url_item) == 1:
+                url_item.remove(tem_item[0])
+                
         if url['number']+url['year'] in download_Progress:
             print(f"{ url['number']+url['year']}已下载过，跳过") # 打印进度
             continue
@@ -103,9 +107,9 @@ def pageDownload(year,pageNum,req):
             if year_:
                 item1 = {}
                 item1["url"] = pdfurl
-                item1["year"] = year_
+                item1["year"] = + "更新"
                 item1["number"] = number
-                item1['name'] = name
+                item1['name'] = name 
                 url_item.append(item1)
             else:#年报标题上无年份，或含年份外的其他数字
                 downloadError(pdfurl,number)
@@ -114,8 +118,10 @@ def pageDownload(year,pageNum,req):
             with lock:  
                 with open('年报url.csv',"a+",newline = '') as csv_f:
                     csv.writer(csv_f).writerow([pdfurl])
-                    
+             
+              
         else:
+            
             adjunctUrl = item["adjunctUrl"] # "finalpage/2019-04-30/1206161856.PDF" 中间部分便为年报发布日期，只需对字符切片即可
             pdfurl = "http://static.cninfo.com.cn/" + adjunctUrl
             year_  = getYear(item["announcementTitle"])
@@ -345,6 +351,7 @@ file_name = "已下载公司代码.txt"#记录年报的下载进度
 file_name_xls = "股票代码.xlsx"#需要下载的公司代码所在的xls文件,出口上市公司.xls
 download_Progress = readTxt()# 读取已下载进度
 list_years = ["2015","2016","2017","2018","2019","2020","2021","2022"] # 下载所需要的年份年报
+
 data  = {
         "pageNum":"1",
         "pageSize":"30",
