@@ -1,8 +1,17 @@
-import json ,time,datetime
+import json ,csv
 import requests,json,os,time
 from openpyxl import load_workbook
 current_file_path = os.path.abspath(__file__)
 os.chdir(os.path.dirname(current_file_path))  
+
+
+def readTxt(file_name):# 读取已下载的公司代码
+    if not os.path.exists(file_name):
+        with open(file_name, "w") as f:
+            f.write('')
+    with open(file_name, "r") as f:
+        data = f.read().splitlines()
+        return data  
 
 def check(number):#检查xls文件格式，调整文件内容
     if type(number) == str:
@@ -39,7 +48,14 @@ def getNumber(file_name_xls):#获取xls文件内的公司代码
 
 code_numbers = getNumber("深交所代码.xlsx")
 # 需要的时间段
-date = ["2013-12-31", "2020-5-29"]
+def getYear(tile:str):#获取年报标题上的年份，便于对年报进行重命名
+    year = ''
+    for i in tile:
+        if i.isdigit():
+            year += i
+    if len(year) == 4:
+        return year
+    return False
 
 
 url = 'http://www.szse.cn/api/disc/announcement/annList?random=0.8015180112682705'
@@ -56,30 +72,56 @@ headers = {'Accept':'application/json, text/javascript, */*; q=0.01',
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.116 Safari/537.36',
             'X-Request-Type':'ajax',
             'X-Requested-With':'XMLHttpRequest'}
-
+#http://www.szse.cn/api/disc/info/download?id=c7427842-879c-4dcb-a2f2-7db95d3b10bf
 #payload，获取源代码
+csv_headers = ['company','code', 'year',  'pdf']
 list_years = ["2015","2016","2017","2018","2019","2020","2021","2022"] # 下载所需要的年份年报
+list_code = readTxt("深交所进度.txt")
 for code_number in code_numbers:
-    print(code_number)
+    if code_numbers in list_code:
+       print(f"已下载{code_number}")
+       
     for year in list_years:
       
         payload = {'seDate': (f"{str(int(year)+1)}-01-01",f"{str(int(year)+1)}-12-31"),
                 'stock': ["{firm_id}".format(firm_id=code_number)],
                 'channelCode': ["fixed_disc"],
                 'pageSize': 60,
-                'pageNum': '{page}'.format(page=1)}
-        
-        response = requests.post(url, headers=headers, data=json.dumps(payload))
-        doc = response.json()
-        
+                'pageNum': '{page}'.format(page=1),
+                "bigCategoryId":["010301"]
+                            }
+        while True:
+            try:
+                response = requests.post(url, headers=headers, data = json.dumps(payload))
+                doc = response.json()
+                break
+            except:
+                print('获取失败，重新获取')
+                time.sleep(60)
+          
+       
+        list_data = []
         datas = doc.get('data')
-        print(datas)
-        datas = json.dumps(datas)
-        time.sleep(3)
+        for data in datas:
+            company = data.get('secName')
+            year_ = getYear(data.get('title'))
+            pdf = 'http://www.szse.cn/api/disc/info/download?id=' + data.get('id')
+            code = code_number
+            data_csv = [company, code, year_, pdf]
+            
+            list_data.append(data_csv)
+            
+        if not os.path.exists('深交所.csv'):
+            with open('深交所.csv','a+',encoding="utf8",newline='') as f:
+                f_csv = csv.writer(f)
+                f_csv.writerow(csv_headers)
+            
+        with open('深交所.csv','a+',encoding="utf8",newline='') as f:
+            f_csv = csv.writer(f)
+            f_csv.writerows(list_data)
+            
+        with open("深交所进度.txt", 'a+') as f:
+            f.write(str(code_number)+ '\n')
+            
         
-        if datas != "[]":
-            with open('parsed_data.txt', 'a+', encoding='utf-8') as f:
-                f.write(f"{datas}\n")
-      
-    
-   
+       
