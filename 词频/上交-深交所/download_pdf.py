@@ -21,6 +21,15 @@ shen_headers  = {'Accept':'application/json, text/javascript, */*; q=0.01',
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.116 Safari/537.36',
             'X-Request-Type':'ajax',
             'X-Requested-With':'XMLHttpRequest'}
+
+def readTxt(file_name):# 读取已下载的公司代码
+    if not os.path.exists(file_name):
+        with open(file_name, "w") as f:
+            f.write('')
+    with open(file_name, "r") as f:
+        data = f.read().splitlines()
+        return data    
+    
 def read_csv_to_dict(filename,csv_headers):
     data = []
     with open(filename, 'r', newline='', encoding='utf-8') as file:
@@ -34,7 +43,11 @@ shang_url_lst = read_csv_to_dict("上交所.csv",shang_csv_headers)
 shen_url_lst = read_csv_to_dict("深交所.csv",shen_csv_headers)
 
 def download_task(headers,url_lst,base_dir):
+    list_number = readTxt("已下载.txt")
     for url in url_lst:
+        if url["code"] in list_number:
+            print(url["code"] + "-" +  url["year"],"已下载，跳过")
+            continue
         print(url["code"] + "-" +  url["year"],"开始下载",threading.current_thread().ident)
        
         while True:
@@ -49,27 +62,34 @@ def download_task(headers,url_lst,base_dir):
                     f.write(response.content)
                     print(url["code"] +  "-" + url["year"],"下载完成")
                     
+                    lock.acquire()
+                    with open("已下载.txt", "a") as f:
+                        f.write(url["code"] + "\n")
+                        
+                    lock.release()
+                    
                 break
             except Exception as e:
                 print(e,threading.current_thread().ident)
                 print("下载失败，重新下载")
                 time.sleep(60)
        
-           
-           
-she_ndir = "年报/深交/"
-shang_dir = "年报/上交所/"
+if __name__ == "__mian__":         
+    # 创建一个锁
+    lock = threading.Lock()          
+    she_ndir = "年报/深交/"
+    shang_dir = "年报/上交所/"
 
-# 创建多个线程
-thread1 = threading.Thread(target=download_task, args=(shen_headers, shen_url_lst, she_ndir))
-thread2 = threading.Thread(target=download_task, args=(shang_headers, shang_url_lst, shang_dir))
+    # 创建多个线程
+    thread1 = threading.Thread(target=download_task, args=(shen_headers, shen_url_lst, she_ndir))
+    thread2 = threading.Thread(target=download_task, args=(shang_headers, shang_url_lst, shang_dir))
 
-thread1.start()
-thread2.start()
+    thread1.start()
+    thread2.start()
 
-# 主线程等待所有子线程执行完毕
-thread1.join()
-thread2.join()
+    # 主线程等待所有子线程执行完毕
+    thread1.join()
+    thread2.join()
 
-print("All threads finished")
+    print("All threads finished")
 
