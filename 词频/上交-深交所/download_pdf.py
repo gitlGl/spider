@@ -74,7 +74,7 @@ def download_task(headers,url_lst,base_dir):
                 print("下载失败，重新下载")
                 time.sleep(60)
        
-if __name__ == "__mian__":         
+if __name__ == '__main__':        
     # 创建一个锁
     lock = threading.Lock()          
     she_ndir = "年报/深交/"
