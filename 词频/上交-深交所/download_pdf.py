@@ -1,26 +1,14 @@
 import csv,requests,os,threading,time
+from fake_useragent import UserAgent
+
+ua = UserAgent()
+
 shen_csv_headers = ['company', 'code', 'year', 'pdf']
 shang_csv_headers=['company','code', 'type', 'year', 'date' ,"title",'pdf']
 current_file_path = os.path.abspath(__file__)
 os.chdir(os.path.dirname(current_file_path))  
  
-shang_headers = {
-    'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.163 Safari/537.36',
-    'Referer': 'http://www.sse.com.cn/disclosure/listedinfo/regular/'}
 
-shen_headers  = {'Accept':'application/json, text/javascript, */*; q=0.01',
-            'Accept-Encoding':'gzip, deflate',
-            'Accept-Language':'en-US,en;q=0.9,zh-CN;q=0.8,zh;q=0.7',
-            'Connection':'keep-alive',
-            'Content-Length':'92',
-            'Content-Type':'application/json',
-            'DNT':'1',
-            'Host':'www.szse.cn',
-            'Origin':'http://www.szse.cn',
-            'Referer':'http://www.szse.cn/disclosure/listed/fixed/index.html',
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.116 Safari/537.36',
-            'X-Request-Type':'ajax',
-            'X-Requested-With':'XMLHttpRequest'}
 
 def readTxt(file_name):# 读取已下载的公司代码
     if not os.path.exists(file_name):
@@ -42,8 +30,9 @@ def read_csv_to_dict(filename,csv_headers):
 shang_url_lst = read_csv_to_dict("上交所.csv",shang_csv_headers)
 shen_url_lst = read_csv_to_dict("深交所.csv",shen_csv_headers)
 
-def download_task(headers,url_lst,base_dir):
+def download_task(url_lst,base_dir):
     list_number = readTxt("已下载.txt")
+    headers = {"User-Agent": ua.random}
     for url in url_lst:
         if url["code"] in list_number:
             print(url["code"] + "-" +  url["year"],"已下载，跳过")
@@ -81,8 +70,8 @@ if __name__ == '__main__':
     shang_dir = "年报/上交所/"
 
     # 创建多个线程
-    thread1 = threading.Thread(target=download_task, args=(shen_headers, shen_url_lst, she_ndir))
-    thread2 = threading.Thread(target=download_task, args=(shang_headers, shang_url_lst, shang_dir))
+    thread1 = threading.Thread(target=download_task, args=( shen_url_lst, she_ndir))
+    thread2 = threading.Thread(target=download_task, args=( shang_url_lst, shang_dir))
 
     thread1.start()
     thread2.start()
