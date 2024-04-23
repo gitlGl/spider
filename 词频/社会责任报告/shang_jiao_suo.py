@@ -3,7 +3,7 @@ import requests,re,csv,os,time
 current_file_path = os.path.abspath(__file__)
 os.chdir(os.path.dirname(current_file_path))
 
-csv_file_path = '上交.csv'
+csv_file_path = '上交所.csv'
 url = "http://query.sse.com.cn/search/getESSearchDoc.do?"
 cookies = {"Cookie": 'ba17301551dcbaf9_gdp_session_id=fe0089fe-71b7-4375-80c5-2b80d625e1df; gdp_user_id=gioenc-7b87geg9%2C5463%2C53ec%2Ca8g7%2C41aadbc577b5; ba17301551dcbaf9_gdp_session_id_sent=fe0089fe-71b7-4375-80c5-2b80d625e1df; VISITED_MENU=%5B%229075%22%2C%2210766%22%5D; sseMenuSpecial=14887; ba17301551dcbaf9_gdp_sequence_ids={%22globalKey%22:94%2C%22VISIT%22:2%2C%22PAGE%22:22%2C%22VIEW_CLICK%22:68%2C%22CUSTOM%22:4%2C%22VIEW_CHANGE%22:2}'}
 
@@ -45,63 +45,65 @@ params["page"] = page + 1
 
     
 def extract_data(raw_data):                                                                                                                                                                                                                                                                                                                 
-    url = 'http://www.sse.com.cn/' +  raw_data['extend'][4]["value"]
+    pdf = 'http://www.sse.com.cn/' +  raw_data['extend'][4]["value"]
     createTime = raw_data['createTime'][:10]
     year = str(int(createTime[:4]) - 1)
-    createTime = year + "年"
     
     # 提取股票代码和报告标题
     documentId = raw_data['documentId']
-    stock_code = documentId[7:][:6]
-    company_name = raw_data['extend'][5]["value"]
-    if company_name is None:
-        company_name =  raw_data["title"].replace(f"[{stock_code}]", "").replace("</em>",'').replace("<em>",'')
+    code = documentId[7:][:6]
+    company = raw_data['extend'][5]["value"]
+    if company is None:
+        company =  raw_data["title"].replace(f"[{code}]", "").replace("</em>",'').replace("<em>",'')
         
-    report_title = company_name + createTime + "社会责任报告"
-    return createTime,stock_code, company_name,report_title,documentId,url
+    report_title = company + createTime + "社会责任报告"
+    return code,year, company,report_title,documentId,pdf
 
     
-res = requests.get(url,params=params,cookies=cookies,headers=headers)
-raw_data = res.json()['data']["knowledgeList"]
 
+def shang_jiao_suo():
+    res = requests.get(url,params=params,cookies=cookies,headers=headers)
+    raw_data = res.json()['data']["knowledgeList"]
 
-
-while raw_data:
-    data = []
-    for x in raw_data:
-        data.append(extract_data (x))
-        # CSV 文件路径
-       
-    # 写入数据到 CSV 文件
-    if not os.path.exists(csv_file_path):
-        with open(csv_file_path, "w",newline='', encoding='utf-8') as csvfile:
+    while raw_data:
+        data = []
+        for x in raw_data:
+            data.append(extract_data (x))
+            # CSV 文件路径
+        
+        # 写入数据到 CSV 文件
+        if not os.path.exists(csv_file_path):
+            with open(csv_file_path, "w",newline='', encoding='utf-8') as csvfile:
+                writer = csv.writer(csvfile)
+                writer.writerow(['code', 'year', 'company', 'report_title', 'documentId', 'pdf'])
+                
+            
+        with open(csv_file_path, 'a+', newline='', encoding='utf-8') as csvfile:
             writer = csv.writer(csvfile)
-            writer.writerow(['createTime', 'stock_code', 'company_name', 'report_title', 'documentId', 'url'])
+            writer.writerows(data)
+            csvfile.flush()
             
-           
-    with open(csv_file_path, 'a+', newline='', encoding='utf-8') as csvfile:
-        writer = csv.writer(csvfile)
-        writer.writerows(data)
-        csvfile.flush()
-        
-    with open("上交进度.txt","w") as f:
-        f.write(str(params["page"]))
-        
-    print( f"第{params['page']}页完成")  
-    params["page"] = params["page"] + 1
-    count = 0 
-    while True:
-        count = count + 1
-        if count > 5:
-            break
-        try:
-            time.sleep(1)
-            res = requests.get(url,params=params,cookies=cookies,headers=headers)
-            raw_data = res.json()['data']["knowledgeList"]
-            break
+        with open("上交进度.txt","w") as f:
+            f.write(str(params["page"]))
             
-        except Exception as e:
-            print(e)
+        print( f"上交所：第{params['page']}页完成")  
+        params["page"] = params["page"] + 1
+        
+        while True:
+            try:
+                time.sleep(1)
+                res = requests.get(url,params=params,cookies=cookies,headers=headers)
+                raw_data = res.json()['data']["knowledgeList"]
+                break
+                
+            except Exception as e:
+                print(e)
+                time.sleep(60)
+        
+
+if __name__ == '__main__':
+    shang_jiao_suo()
+    
 
     
     
